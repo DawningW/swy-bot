@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30611.23
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "swy-bot", "swy-bot.pyproj", "{E698F192-E2E3-4F1F-AFF7-FE35D82AD9F4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E698F192-E2E3-4F1F-AFF7-FE35D82AD9F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E698F192-E2E3-4F1F-AFF7-FE35D82AD9F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F25C312F-CFA0-4244-8AFB-EFD64D02D586}
+	EndGlobalSection
+EndGlobal
