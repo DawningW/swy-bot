@@ -12,6 +12,12 @@ PS: 每次做菜都剩下一大堆食材好烦啊
 无
 
 ## 食材
+- opencv-python
+- pywin32
+- PyAutoGUI
+- pure-python-adb
+- pyinstaller(如需要打包)
+
 详见requirements.txt
 
 ## 烹饪日记
@@ -23,6 +29,6 @@ PS: 每次做菜都剩下一大堆食材好烦啊
 ## 版权信息
 本项目以MIT协议开源
 
-仅供学习交流, 禁止用于盈利.
+仅供学习交流, 严禁用于盈利.
 
 使用本脚本造成的一切后果由使用者自行承担.

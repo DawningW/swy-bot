@@ -1,15 +1,16 @@
 # coding=utf-8
 
+import os
 import sys
 import ctypes
 import atexit
-import cv2
 
 from player import Player, PlayerADB
 
 player = None
 
 def main():
+    settitle("欢迎使用食物语挂机脚本")
     print('''=============================================
 食物语挂机脚本 V1.0 作者: WC
 本脚本仅供个人代肝使用, 严禁用于商业用途
@@ -18,7 +19,7 @@ def main():
 欢迎提交问题或是直接PR
 =============================================''')
     while True:
-        print('''-----< 菜单 >-----
+        print('''-----< 菜 单 >-----
 1. 原生模式(需先启动安卓虚拟机并打开食物语)
 2. ADB模式(需手机连接电脑打开调试模式并打开食物语)
 0. 退出''')
@@ -31,19 +32,21 @@ def main():
             player = PlayerADB()
         else:
             continue
-        ctypes.windll.kernel32.SetConsoleTitleW("食物语挂机脚本运行中 - 按 Ctrl + C 退出")
-        player.init()
-        player.run()
-        break
+        settitle("食物语挂机脚本运行中 - 按 Ctrl + C 退出")
+        if (player.init()): player.run()
     return
 
 @atexit.register  
 def onexit():
+    settitle("食物语挂机脚本已结束")
     if player != None: player.end()
     print('''
 =============================================
 食物语挂机脚本已停止运行, 感谢您的使用, 再见!
 =============================================''')
+
+def settitle(title):
+    ctypes.windll.kernel32.SetConsoleTitleW(title)
 
 def isadmin():
     "检查管理员权限"
