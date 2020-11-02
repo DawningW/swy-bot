@@ -5,7 +5,7 @@ import sys
 import ctypes
 import atexit
 
-from player import Player, PlayerADB
+from player import Player, PlayerADB, PlayerTest
 
 player = None
 
@@ -22,6 +22,7 @@ def main():
         print('''-----< 菜 单 >-----
 1. 原生模式(需先启动安卓虚拟机并打开食物语)
 2. ADB模式(需手机连接电脑打开调试模式并打开食物语)
+3. 调试模式(将读取程序目录下的test.png并进行图像识别)
 0. 退出''')
         str = input("请选择: ")
         if str == "0":
@@ -30,6 +31,8 @@ def main():
             player = Player()
         elif str == "2":
             player = PlayerADB()
+        elif str == "3":
+            player = PlayerTest()
         else:
             continue
         settitle("食物语挂机脚本运行中 - 按 Ctrl + C 退出")
@@ -40,8 +43,7 @@ def main():
 def onexit():
     settitle("食物语挂机脚本已结束")
     if player != None: player.end()
-    print('''
-=============================================
+    print('''=============================================
 食物语挂机脚本已停止运行, 感谢您的使用, 再见!
 =============================================''')
 

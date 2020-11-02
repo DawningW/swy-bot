@@ -1,4 +1,5 @@
 # coding=utf-8
+import time
 import numpy
 import cv2
 import pyautogui
@@ -6,8 +7,18 @@ from ppadb.client import Client as AdbClient
 
 import utils
 
+WINDOW_NAME = "Preview Window"
 
 class PlayerBase(object):
+    # 游戏实际的宽度
+    width = 0
+    # 游戏实际的高度
+    height = 0
+    # 预览窗口高度
+    wheight = 0
+    # 预览窗口高度 / 游戏实际高度
+    radio = 1.0
+
     """模拟玩家操作的基类"""
     def __init__(self):
         return
@@ -15,6 +26,8 @@ class PlayerBase(object):
     def init(self):
         """执行寻找游戏等初始化操作"""
         print("正在初始化, 请稍候")
+        self.wheight = input("请输入预览窗口的高(0为关闭预览): ")
+        # 考虑默认480?
         return True
 
     def run(self):
@@ -23,7 +36,7 @@ class PlayerBase(object):
             print('''-----< 菜 单 >-----
 1. 自动客潮(请将界面停留在餐厅)
 2. 自动小游戏(尚未编写)
-PS: 输入其他数字自动退出''')
+PS: 输入其他数字退出''')
             select = input("请输入序号: ")
             if (select == "1"):
                 self.kechao()
@@ -34,7 +47,19 @@ PS: 输入其他数字自动退出''')
         return
 
     def kechao(self):
-        self.screenshot()
+        image = self.screenshot()
+        image = cv2.resize(image, None, fx = 0.5, fy = 0.5, interpolation = cv2.INTER_CUBIC)
+        cv2.imshow(WINDOW_NAME, image)
+        cv2.waitKey(0)
+        #time.sleep(1)
+        cv2.destroyAllWindows()
+
+        # 模拟点击测试
+        while True:
+            x = input("X: ")
+            y = input("Y: ")
+            self.click(x, y)
+        
         return
 
     def end(self):
@@ -42,7 +67,14 @@ PS: 输入其他数字自动退出''')
         cv2.destroyAllWindows()
         return
 
+    def calcFactor(self, length):
+
+        return
+
     def screenshot(self):
+        return
+
+    def click(self, x, y):
         return
 
 class Player(PlayerBase):
@@ -68,24 +100,42 @@ class PlayerADB(PlayerBase):
             print("已自动选择设备: {}".format(devices[0].serial))
             self.device = devices[0]
         elif size > 1:
-            for i in range():
+            for i in range(size):
                 print("{}. {}".format(i + 1, device[i].serial))
             select = 0
             while (select < 1 or select > size):
                 select = int(input("请选择设备序号: "))
-            self.device = devices[select]
+            self.device = devices[select - 1]
         else:
             print("未检测到设备, 请手动连接设备. ")
             return False
-        print("已成功连接至设备 {}, 开始运行挂机脚本".format(self.device.serial))
+        print("已成功连接至设备 {}".format(self.device.serial))
+        self.height, self.width = self.device.wm_size()
+        print("已获得设备屏幕尺寸: {} X {}".format(self.width, self.height))
+        print('''=============================================
+开始运行挂机脚本''')
         return True
 
     def screenshot(self):
-        data = self.device.screencap()
-        image = numpy.asarray(bytearray(data), dtype="uint8")
+        buffer = self.device.screencap()
+        image = numpy.frombuffer(buffer, dtype = "uint8")
         image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-        image = cv2.resize(image,None,fx=0.5, fy=0.5, interpolation = cv2.INTER_CUBIC)
-        cv2.imshow('img_decode',image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        return image
+
+    def click(self, x, y):
+        self.device.input_tap(x, y)
         return
+
+class PlayerTest(PlayerBase):
+    """测试图像识别"""
+    path = None
+
+    def screenshot(self):
+        image = readimage("test")
+        return image
+
+def readimage(name):
+    return cv2.imread("./data/" + name + ".png", cv2.IMREAD_UNCHANGED)
+
+def writeimage(name, image):
+    cv2.imwrite("./data/screenshots/" + name + ".png", image, [int(cv2.IMWRITE_PNG_COMPRESSION), 3])
