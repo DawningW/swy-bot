@@ -1,13 +1,11 @@
 # coding=utf-8
-import time
 import numpy
 import cv2
+import win32gui, win32ui, win32con
 import pyautogui
 from ppadb.client import Client as ADBClient
 
 import utils
-
-WINDOW_NAME = "Preview Window"
 
 class PlayerBase(object):
     # 游戏实际的宽度
@@ -17,7 +15,7 @@ class PlayerBase(object):
     # 预览窗口高度
     wheight = 0
     # 预览窗口高度 / 游戏实际高度
-    radio = 1.0
+    factor = 1.0
 
     """模拟玩家操作的基类"""
     def __init__(self):
@@ -38,7 +36,7 @@ class PlayerBase(object):
         return
 
     def calcFactor(self):
-        self.radio = self.wheight / self.height
+        self.factor = self.wheight / self.height
         return
 
     def screenshot(self):
@@ -49,7 +47,41 @@ class PlayerBase(object):
 
 class Player(PlayerBase):
     """模拟鼠标点击窗口"""
-    client = None
+    window = None
+
+    def init(self):
+        super().init()
+        #获取后台窗口的句柄，注意后台窗口不能最小化
+        hWnd = win32gui.FindWindow("NotePad", None) #窗口的类名可以用Visual Studio的SPY++工具获取
+        #获取句柄窗口的大小信息
+        left, top, right, bot = win32gui.GetWindowRect(hWnd)
+        width = right - left
+        height = bot - top
+        #返回句柄窗口的设备环境，覆盖整个窗口，包括非客户区，标题栏，菜单，边框
+        hWndDC = win32gui.GetWindowDC(hWnd)
+        #创建设备描述表
+        mfcDC = win32ui.CreateDCFromHandle(hWndDC)
+        #创建内存设备描述表
+        saveDC = mfcDC.CreateCompatibleDC()
+        #创建位图对象准备保存图片
+        saveBitMap = win32ui.CreateBitmap()
+        #为bitmap开辟存储空间
+        saveBitMap.CreateCompatibleBitmap(mfcDC,width,height)
+        #将截图保存到saveBitMap中
+        saveDC.SelectObject(saveBitMap)
+        #保存bitmap到内存设备描述表
+        saveDC.BitBlt((0,0), (width,height), mfcDC, (0, 0), win32con.SRCCOPY)
+        #获取位图信息
+        signedIntsArray = saveBitMap.GetBitmapBits(True)
+        #PrintWindow成功，保存到文件，显示到屏幕
+        image = numpy.frombuffer(signedIntsArray, dtype = 'uint8')
+        image.shape = (height, width, 4)
+        cv2.cvtColor(image, cv2.COLOR_BGRA2RGB)
+        cv2.imwrite("image.jpg",image,[int(cv2.IMWRITE_JPEG_QUALITY), 100]) #保存
+        cv2.namedWindow('image') #命名窗口
+        cv2.imshow("image",image) #显示
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
 class PlayerADB(PlayerBase):
     """通过ADB控制手机"""
@@ -83,7 +115,7 @@ class PlayerADB(PlayerBase):
         self.height, self.width = self.device.wm_size()
         print("已获得设备屏幕尺寸: {} X {}".format(self.width, self.height))
         self.calcFactor()
-        print("已计算缩放因子: {}".format(self.radio))
+        print("已计算缩放因子: {}".format(self.factor))
         return True
 
     def screenshot(self):
@@ -109,11 +141,4 @@ def readimage(name):
 
 def writeimage(name, image):
     cv2.imwrite("./data/screenshots/" + name + ".png", image, [int(cv2.IMWRITE_PNG_COMPRESSION), 3])
-    return
-
-def showimage(image):
-    cv2.imshow(WINDOW_NAME, image)
-    cv2.waitKey(0)
-    # time.sleep(1)
-    cv2.destroyAllWindows()
     return

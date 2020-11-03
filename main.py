@@ -1,18 +1,21 @@
 # coding=utf-8
 
 from enum import Enum, auto
-import os
 import sys
+import time
 import ctypes
 import atexit
+
 import cv2
 
-from player import Player, PlayerADB, PlayerTest, showimage
+from player import Player, PlayerADB, PlayerTest
 
 class Modes(Enum):
     KECHAO = auto()
     HDXYX = auto()
 
+WINDOW_NAME = "Preview Window"
+fps = 5
 functions = {}
 player = None
 
@@ -68,22 +71,38 @@ PS: 输入其他数字退出''')
 def run(mode):
     settitle("食物语挂机脚本运行中 - 按 Ctrl + C 退出")
     print("开始运行挂机脚本")
-    functions[mode]()
+    cv2.namedWindow(WINDOW_NAME)
+    cv2.setMouseCallback(WINDOW_NAME, onclicked)
+    times = 0
+    while True:
+        times = times + 1
+        print("第 {} 次运行脚本 {}".format(times, mode))
+        if not functions[mode](): break
+    cv2.destroyAllWindows()
     settitle("当前挂机脚本已运行完毕 - 准备就绪")
     print("挂机脚本已运行完毕")
     return
 
-def kechao():
-    image = player.screenshot()
-    image = cv2.resize(image, None, fx = player.radio, fy = player.radio, interpolation = cv2.INTER_CUBIC)
-    showimage(image)
-    
-    # 模拟点击测试
-    while True:
-        x = input("X: ")
-        y = input("Y: ")
-        self.click(x, y)
+# 以下是具体挂机逻辑, 每次调用函数都应被视作挂机一次, 返回True将会继续, 如果想退出请返回False
+def kechao():    
+    key = 0
+    while key & 0xFF != 27:
+        start = time.time()
+        image = player.screenshot()
+        image = cv2.resize(image, None, fx = player.factor, fy = player.factor, interpolation = cv2.INTER_CUBIC)
+        cv2.imshow(WINDOW_NAME, image)
+        wait = (1 / fps - (time.time() - start)) * 1000
+        if wait < 0:
+            print("严重滞后, 发生了什么让你的电脑变慢呢? 时间 {} ms".format(-wait))
+            wait = 1
+        key = cv2.waitKey(wait)
         
+    return
+
+def onclicked(event, x, y, flags, param):
+    if event == cv2.EVENT_LBUTTONDOWN:
+        print("X: {} Y: {}".format(x, y))
+        player.click(x / player.factor, y / player.factor)
     return
 
 @atexit.register  
@@ -93,9 +112,11 @@ def onexit():
     print('''=============================================
 食物语挂机脚本已停止运行, 感谢您的使用, 再见!
 =============================================''')
+    return
 
 def settitle(title):
     ctypes.windll.kernel32.SetConsoleTitleW(title)
+    return
 
 def isadmin():
     "检查管理员权限"
