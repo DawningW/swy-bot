@@ -15,13 +15,14 @@ class Modes(Enum):
     HDXYX = auto()
 
 WINDOW_NAME = "Preview Window"
-fps = 5
 functions = {}
+fps = 5
 player = None
 
 def main():
     functions[Modes.KECHAO] = kechao
     functions[Modes.HDXYX] = None
+    setnodpi()
     settitle("欢迎使用食物语挂机脚本")
     print('''=============================================
 食物语挂机脚本 V1.0 作者: WC
@@ -91,7 +92,7 @@ def kechao():
         image = player.screenshot()
         image = cv2.resize(image, None, fx = player.factor, fy = player.factor, interpolation = cv2.INTER_CUBIC)
         cv2.imshow(WINDOW_NAME, image)
-        wait = (1 / fps - (time.time() - start)) * 1000
+        wait = int((1 / fps - (time.time() - start)) * 1000)
         if wait < 0:
             print("严重滞后, 发生了什么让你的电脑变慢呢? 时间 {} ms".format(-wait))
             wait = 1
@@ -101,7 +102,7 @@ def kechao():
 
 def onclicked(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
-        print("X: {} Y: {}".format(x, y))
+        print("点击 X: {} Y: {}".format(x, y))
         player.click(x / player.factor, y / player.factor)
     return
 
@@ -112,6 +113,13 @@ def onexit():
     print('''=============================================
 食物语挂机脚本已停止运行, 感谢您的使用, 再见!
 =============================================''')
+    return
+
+def setnodpi():
+    try: # >= win 8.1
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
+    except: # win 8.0 or less
+        ctypes.windll.user32.SetProcessDPIAware()
     return
 
 def settitle(title):
@@ -128,7 +136,7 @@ def isadmin():
 # 入口
 if __name__ == "__main__":
     # 检查权限
-    if True: # isadmin()
+    if isadmin() or True:
         try:
             main()
         except KeyboardInterrupt:

@@ -1,13 +1,12 @@
 # coding=utf-8
 import numpy
 import cv2
-import win32gui, win32ui, win32con
 import pyautogui
 from ppadb.client import Client as ADBClient
-
 import utils
 
 class PlayerBase(object):
+    """模拟玩家操作的基类"""
     # 游戏实际的宽度
     width = 0
     # 游戏实际的高度
@@ -17,7 +16,6 @@ class PlayerBase(object):
     # 预览窗口高度 / 游戏实际高度
     factor = 1.0
 
-    """模拟玩家操作的基类"""
     def __init__(self):
         return
 
@@ -47,44 +45,80 @@ class PlayerBase(object):
 
 class Player(PlayerBase):
     """模拟鼠标点击窗口"""
-    window = None
+    window = 0
+    child = 0
 
     def init(self):
         super().init()
-        #获取后台窗口的句柄，注意后台窗口不能最小化
-        hWnd = win32gui.FindWindow("NotePad", None) #窗口的类名可以用Visual Studio的SPY++工具获取
-        #获取句柄窗口的大小信息
-        left, top, right, bot = win32gui.GetWindowRect(hWnd)
-        width = right - left
-        height = bot - top
-        #返回句柄窗口的设备环境，覆盖整个窗口，包括非客户区，标题栏，菜单，边框
-        hWndDC = win32gui.GetWindowDC(hWnd)
-        #创建设备描述表
-        mfcDC = win32ui.CreateDCFromHandle(hWndDC)
-        #创建内存设备描述表
-        saveDC = mfcDC.CreateCompatibleDC()
-        #创建位图对象准备保存图片
-        saveBitMap = win32ui.CreateBitmap()
-        #为bitmap开辟存储空间
-        saveBitMap.CreateCompatibleBitmap(mfcDC,width,height)
-        #将截图保存到saveBitMap中
-        saveDC.SelectObject(saveBitMap)
-        #保存bitmap到内存设备描述表
-        saveDC.BitBlt((0,0), (width,height), mfcDC, (0, 0), win32con.SRCCOPY)
-        #获取位图信息
-        signedIntsArray = saveBitMap.GetBitmapBits(True)
-        #PrintWindow成功，保存到文件，显示到屏幕
-        image = numpy.frombuffer(signedIntsArray, dtype = 'uint8')
+        windows = [("TXGuiFoundation", "腾讯手游助手【极速傲引擎-7.1】"), ("StartupDui", "多屏协同")]# 
+        for (classname, windowname) in windows:
+             self.window = utils.findwindow(None, classname, windowname)
+             if self.window != 0: break
+        if self.window == 0:
+            print("无法自动获取游戏窗口, 请手动获取(可以用VS的SPY++工具获取)")
+            classname = input("请输入窗口类名: ")
+            windowname = input("请输入窗口标题: ")
+            if classname == "": classname = None
+            if windowname == "": windowname = None
+            self.window = utils.findwindow(None, classname, windowname)
+            if (self.window == 0):
+                print("错误: 无法获取窗口句柄")
+                return False
+        print("已成功获取窗口句柄: {}".format(hex(self.window)))
+        print("请在接下来打开的截图窗口中选择一个点以获取子窗口然后按任意键退出")
+        print("若通过这种方式无法选中子窗口, 请直接在截图窗口按任意键退出并手动输入子窗口句柄")
+        title = "Click a point to select child window"
+        width, height = utils.getsize(self.window)
+        buffer = utils.screenshot(self.window)
+        image = numpy.frombuffer(buffer, dtype = "uint8")
         image.shape = (height, width, 4)
         cv2.cvtColor(image, cv2.COLOR_BGRA2RGB)
-        cv2.imwrite("image.jpg",image,[int(cv2.IMWRITE_JPEG_QUALITY), 100]) #保存
-        cv2.namedWindow('image') #命名窗口
-        cv2.imshow("image",image) #显示
+        cv2.namedWindow(title)
+        cv2.setMouseCallback(title, onclicked, [self.window])
+        cv2.imshow(title, image)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
+        self.child = Temp
+        if self.child == 0:
+            print("遍历获取子窗口尚未编写, 请直接输入子窗口类名")
+            classname = input("请输入子窗口类名: ")
+            if classname != '': self.child = utils.findwindow(self.window, classname, None)
+            if self.child == 0:
+                print("还是失败的话请直接输入句柄吧...")
+                str = input("请输入子窗口句柄(16进制): ")
+                if str == '': self.child = self.window
+                else: self.child = hex(int(str, 16))
+        print("已成功获取子窗口句柄: {}".format(hex(self.child)))
+        self.width, self.height = utils.getsize(self.child)
+        print("已获得模拟器窗口大小: {} X {}".format(self.width, self.height))
+        self.calcFactor()
+        print("已计算缩放因子: {}".format(self.factor))
+        print("注意: 挂机时窗口可以被遮挡, 但不能最小化!!!")
+        return True
+
+    def calcFactor(self):
+        # TODO DPI适配
+        # 算了我写不出来, 那就别适配了= =
+        # dpi = utils.getdpi(self.window)
+        # self.width = int(self.width * dpi['x'] / 96)
+        # self.height = int(self.height * dpi['y'] / 96)
+        super().calcFactor()
+        return
+        
+    def screenshot(self):
+        buffer = utils.screenshot(self.child)
+        image = numpy.frombuffer(buffer, dtype = "uint8")
+        image.shape = (self.height, self.width, 4)
+        cv2.cvtColor(image, cv2.COLOR_BGRA2RGB)
+        return image
+
+    def click(self, x, y):
+        utils.click(self.child, x, y)
+        return
 
 class PlayerADB(PlayerBase):
     """通过ADB控制手机"""
+    server = None
     device = None
 
     def init(self):
@@ -93,9 +127,10 @@ class PlayerADB(PlayerBase):
         client = ADBClient(host="127.0.0.1", port=5037)
         devices = []
         try:
+            print("正在检测设备...")
             devices = client.devices()
         except:
-            print("未检测到ADB Server, 请先启动ADB. ")
+            print("无法连接至ADB Server, 请先启动ADB. ")
             return False
         size = len(devices)
         if size == 1:
@@ -141,4 +176,12 @@ def readimage(name):
 
 def writeimage(name, image):
     cv2.imwrite("./data/screenshots/" + name + ".png", image, [int(cv2.IMWRITE_PNG_COMPRESSION), 3])
+    return
+
+Temp = 0
+def onclicked(event, x, y, flags, param):
+    if event == cv2.EVENT_LBUTTONDOWN:
+        global Temp
+        Temp = utils.getwindow(param[0], x, y)
+        print("已点击 X: {} Y: {} 窗口句柄: {}".format(x, y, hex(Temp)))
     return
