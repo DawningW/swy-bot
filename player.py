@@ -87,7 +87,7 @@ class Player(PlayerBase):
                 print("还是失败的话请直接输入句柄吧...")
                 str = input("请输入子窗口句柄(16进制): ")
                 if str == '': self.child = self.window
-                else: self.child = hex(int(str, 16))
+                else: self.child = int(str, 16)
         print("已成功获取子窗口句柄: {}".format(hex(self.child)))
         self.width, self.height = utils.getsize(self.child)
         print("已获得模拟器窗口大小: {} X {}".format(self.width, self.height))
@@ -113,7 +113,7 @@ class Player(PlayerBase):
         return image
 
     def click(self, x, y):
-        utils.click(self.child, x, y)
+        utils.click(self.child, int(x), int(y))
         return
 
 class PlayerADB(PlayerBase):
@@ -160,15 +160,26 @@ class PlayerADB(PlayerBase):
         return image
 
     def click(self, x, y):
-        self.device.input_tap(x, y)
+        self.device.input_tap(int(x), int(y))
         return
 
 class PlayerTest(PlayerBase):
     """测试图像识别"""
     path = None
 
+    def init(self):
+        super().init()
+        self.path = input("请输入要测试的数据集路径: ")
+        if self.path == "": self.path = "test"
+        print("已成功读取数据集 {}".format(self.path))
+        self.height, self.width = self.screenshot().shape
+        print("已获得截图尺寸: {} X {}".format(self.width, self.height))
+        self.calcFactor()
+        print("已计算缩放因子: {}".format(self.factor))
+        return True
+
     def screenshot(self):
-        image = readimage("test")
+        image = readimage(self.path)
         return image
 
 def readimage(name):

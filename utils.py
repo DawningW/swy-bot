@@ -8,8 +8,25 @@ def getdpi(hWnd):
     win32gui.ReleaseDC(self.window, hDC)
     return dpi
 
+def toscreenpos(hWnd, x, y):
+    return win32gui.ClientToScreen(hWnd, (x, y))
+
 def getcursorpos():
     return win32api.GetCursorPos()
+
+def setcursorpos(x, y):
+    return win32api.SetCursorPos((x, y))
+
+CursorPos = None
+
+def storecursorpos():
+    global CursorPos
+    CursorPos = getcursorpos()
+    return
+
+def restorecursorpos():
+    setcursorpos(CursorPos[0], CursorPos[1])
+    return
 
 def findwindow(parent, classname, windowname):
     hWnd = 0
@@ -50,9 +67,16 @@ def screenshot(hWnd):
     # 获取位图信息
     return bitmap.GetBitmapBits(True)
 
-def click(hwnd, x, y, activate = False):
-    pos = win32api.MAKELONG(int(x), int(y))
-    if activate: win32gui.SetForegroundWindow(hwnd) # 无焦点也能点击, 为啥呢
-    win32api.PostMessage(hwnd, win32con.WM_LBUTTONDOWN, 0, pos)
-    win32api.PostMessage(hwnd, win32con.WM_LBUTTONUP, 0, pos)
+def click(hWnd, x, y, activate = False):
+    storecursorpos()
+    scrpos = toscreenpos(hWnd, x, y)
+    setcursorpos(scrpos[0], scrpos[1])
+    pos = win32api.MAKELONG(x, y)
+    if activate: win32gui.SetForegroundWindow(hWnd) # 无焦点也能点击, 为啥呢
+    win32api.SendMessage(hWnd, win32con.WM_MOUSEMOVE, 0, pos)
+    win32api.SendMessage(hWnd, win32con.WM_MOUSEACTIVATE, hWnd, win32api.MAKELONG(win32con.HTCLIENT, win32con.WM_LBUTTONDOWN))
+    win32api.SendMessage(hWnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, pos)
+    win32api.SendMessage(hWnd, win32con.WM_LBUTTONUP, 0, pos)
+    restorecursorpos()
     return
+
