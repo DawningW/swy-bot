@@ -50,7 +50,10 @@ class Player(PlayerBase):
 
     def init(self):
         super().init()
-        windows = [("TXGuiFoundation", "腾讯手游助手【极速傲引擎-7.1】"), ("StartupDui", "多屏协同")]# 
+        windows = [("TXGuiFoundation", "腾讯手游助手【极速傲引擎-7.1】"), ("StartupDui", "多屏协同"), ("SDL_app", None)]
+        # 腾讯手游助手后台点击可用, 并且开放ADB端口5555, 然而获取截图时失败
+        # 华为多屏协同疑似直接获取光标位置, 而非从消息里读取, 所以需要激活才行, 无法后台挂机
+        # Scrcpy后台挂机可用
         for (classname, windowname) in windows:
              self.window = utils.findwindow(None, classname, windowname)
              if self.window != 0: break
@@ -172,7 +175,7 @@ class PlayerTest(PlayerBase):
         self.path = input("请输入要测试的数据集路径: ")
         if self.path == "": self.path = "test"
         print("已成功读取数据集 {}".format(self.path))
-        self.height, self.width = self.screenshot().shape
+        self.height, self.width = self.screenshot().shape[:2]
         print("已获得截图尺寸: {} X {}".format(self.width, self.height))
         self.calcFactor()
         print("已计算缩放因子: {}".format(self.factor))
@@ -186,7 +189,7 @@ def readimage(name):
     return cv2.imread("./data/" + name + ".png", cv2.IMREAD_UNCHANGED)
 
 def writeimage(name, image):
-    cv2.imwrite("./data/screenshots/" + name + ".png", image, [int(cv2.IMWRITE_PNG_COMPRESSION), 3])
+    cv2.imwrite("./data/screenshot_" + name + ".png", image, [int(cv2.IMWRITE_PNG_COMPRESSION), 3])
     return
 
 Temp = 0

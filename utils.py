@@ -79,4 +79,3 @@ def click(hWnd, x, y, activate = False):
     win32api.SendMessage(hWnd, win32con.WM_LBUTTONUP, 0, pos)
     restorecursorpos()
     return
-

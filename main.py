@@ -5,10 +5,10 @@ import sys
 import time
 import ctypes
 import atexit
-
+import numpy
 import cv2
 
-from player import Player, PlayerADB, PlayerTest
+from player import Player, PlayerADB, PlayerTest, readimage, writeimage
 
 class Modes(Enum):
     KECHAO = auto()
@@ -17,6 +17,7 @@ class Modes(Enum):
 WINDOW_NAME = "Preview Window"
 functions = {}
 fps = 5
+threshold = 0.6
 player = None
 
 def main():
@@ -36,6 +37,7 @@ def main():
 1. 原生模式(需先启动安卓虚拟机并打开食物语)
 2. ADB模式(需手机连接电脑打开调试模式并打开食物语)
 3. 调试模式(将读取程序目录下的test.png并进行图像识别)
+4. 线性规划做菜计算器
 0. 退出''')
         str = input("请选择: ")
         global player
@@ -76,7 +78,7 @@ def run(mode):
     cv2.setMouseCallback(WINDOW_NAME, onclicked)
     times = 0
     while True:
-        times = times + 1
+        times += 1
         print("第 {} 次运行脚本 {}".format(times, mode))
         if not functions[mode](): break
     cv2.destroyAllWindows()
@@ -85,19 +87,24 @@ def run(mode):
     return
 
 # 以下是具体挂机逻辑, 每次调用函数都应被视作挂机一次, 返回True将会继续, 如果想退出请返回False
-def kechao():    
+def kechao():
+    template = readimage("kechao")
+    theight, twidth = template.shape[:2]
     key = 0
     while key & 0xFF != 27:
         start = time.time()
         image = player.screenshot()
         image = cv2.resize(image, None, fx = player.factor, fy = player.factor, interpolation = cv2.INTER_CUBIC)
+        result = cv2.matchTemplate(image, template, cv2.TM_SQDIFF_NORMED)
+        loc = numpy.where(result >= threshold)
+        for pt in zip(*loc[::-1]):
+            cv2.rectangle(image, pt, (pt[0] + twidth, pt[1] + theight), (0,255,0), 3)
         cv2.imshow(WINDOW_NAME, image)
         wait = int((1 / fps - (time.time() - start)) * 1000)
         if wait < 0:
             print("严重滞后, 发生了什么让你的电脑变慢呢? 时间 {} ms".format(-wait))
             wait = 1
         key = cv2.waitKey(wait)
-        
     return
 
 def onclicked(event, x, y, flags, param):
