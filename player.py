@@ -1,4 +1,7 @@
 # coding=utf-8
+import time
+import math
+import random
 import numpy
 import cv2
 import pyautogui
@@ -41,6 +44,35 @@ class PlayerBase(object):
         return
 
     def click(self, x, y):
+        return
+
+    def clickaround(self, x, y):
+        self.clickcircle(x, y, 4)
+        return
+
+    def clickcircle(self, x, y, radius):
+        # 虽然不均匀, 但正是我想要的
+        theta = 2 * math.pi * random.random()
+        rho = radius * random.random()
+        dx = rho * math.cos(theta)
+        dy = rho * math.sin(theta)
+        self.click(x + dx, y + dy)
+        return
+
+    def clickbetween(self, x1, y1, x2, y2):
+        x, y = (x1 + x2) / 2, (y1 + y2) /2
+        self.clickrect(x, y, abs(x2 - x1), abs(y2 - y1))
+        return
+
+    def clicksquare(self, x, y, length):
+        dl = random.randint(-length / 2, length / 2)
+        self.click(x + dl, y + dl)
+        return
+
+    def clickrect(self, x, y, width, height):
+        dx = random.randint(-width / 2, width / 2)
+        dy = random.randint(-height / 2, height / 2)
+        self.click(x + dx, y + dy)
         return
 
 class Player(PlayerBase):
@@ -184,6 +216,11 @@ class PlayerTest(PlayerBase):
     def screenshot(self):
         image = readimage(self.path)
         return image
+
+    def click(self, x, y):
+        print("自动点击 X: {} Y: {}".format(x, y))
+        time.sleep(0.1)
+        return
 
 def readimage(name):
     return cv2.imread("./data/" + name + ".png", cv2.IMREAD_UNCHANGED)

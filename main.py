@@ -8,6 +8,8 @@ import atexit
 import numpy
 import cv2
 
+import random
+
 from player import Player, PlayerADB, PlayerTest, readimage, writeimage
 
 class Modes(Enum):
@@ -17,7 +19,7 @@ class Modes(Enum):
 WINDOW_NAME = "Preview Window"
 functions = {}
 fps = 5
-threshold = 0.6
+threshold = 0.75
 player = None
 
 def main():
@@ -89,23 +91,44 @@ def run(mode):
 # 以下是具体挂机逻辑, 每次调用函数都应被视作挂机一次, 返回True将会继续, 如果想退出请返回False
 def kechao():
     template = readimage("kechao")
-    theight, twidth = template.shape[:2]
+    theight, twidth = template.shape[:2] # test
     key = 0
     while key & 0xFF != 27:
         start = time.time()
+
         image = player.screenshot()
-        image = cv2.resize(image, None, fx = player.factor, fy = player.factor, interpolation = cv2.INTER_CUBIC)
-        result = cv2.matchTemplate(image, template, cv2.TM_SQDIFF_NORMED)
-        loc = numpy.where(result >= threshold)
-        for pt in zip(*loc[::-1]):
-            cv2.rectangle(image, pt, (pt[0] + twidth, pt[1] + theight), (0,255,0), 3)
+        image = cv2.resize(image, None, fx = player.factor, fy = player.factor, interpolation = cv2.INTER_AREA)
+        points = findtemplate(image, template)
+        for x, y in points:
+            #cv2.circle(image, (x, y), 25, (0, 255, 0), 3)
+            cv2.rectangle(image, (x, y), (x + twidth, y + theight), (0, 255, 0), 3)
+        if (len(points) > 0):
+            x, y = random.choice(points)
+            player.clickaround(x / player.factor + 6, y / player.factor + 10)
+
         cv2.imshow(WINDOW_NAME, image)
+
         wait = int((1 / fps - (time.time() - start)) * 1000)
         if wait < 0:
             print("严重滞后, 发生了什么让你的电脑变慢呢? 时间 {} ms".format(-wait))
             wait = 1
         key = cv2.waitKey(wait)
     return
+
+def findtemplate(image, template):
+    theight, twidth = template.shape[:2]
+    result = cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED)
+    # result = cv2.normalize(result, None, 0, 1, cv2.NORM_MINMAX)
+    location = numpy.where(result >= threshold)
+    lx, ly = 0, 0
+    points = []
+    for pt in zip(*location[::-1]):
+        x, y = pt[0] + int(twidth / 2), pt[1] + int(theight / 2)
+        # 去掉重复点
+        if x - lx < twidth or y - ly < theight: continue
+        points.append((x, y))
+        lx, ly = x, y
+    return points
 
 def onclicked(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:

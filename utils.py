@@ -63,7 +63,10 @@ def screenshot(hWnd):
     # 保存bitmap到内存设备描述表
     memDC.BitBlt((0, 0), (width, height), mfcDC, (0, 0), win32con.SRCCOPY)
     # 释放设备环境
+    # mfcDC.DeleteDC()
+    # memDC.DeleteDC()
     win32gui.ReleaseDC(hWnd, hDC)
+    # win32gui.DeleteObject(bitmap.GetHandle())
     # 获取位图信息
     return bitmap.GetBitmapBits(True)
 
