@@ -12,19 +12,27 @@ import random
 
 from player import Player, PlayerADB, PlayerTest, readimage, writeimage
 
+WINDOW_NAME = "Preview Window"
+
 class Modes(Enum):
     KECHAO = auto()
     HDXYX = auto()
 
-WINDOW_NAME = "Preview Window"
 functions = {}
+descriptions = {}
+
+def register(mode: Modes, func, desc):
+    functions[mode] = func
+    descriptions[mode] = desc
+    return
+
 fps = 5
 threshold = 0.75
 player = None
 
 def main():
-    functions[Modes.KECHAO] = kechao
-    functions[Modes.HDXYX] = None
+    register(Modes.KECHAO, kechao, "自动客潮(请将界面停留在餐厅)")
+    register(Modes.HDXYX, None, "自动小游戏(尚未编写)")
     setnodpi()
     settitle("欢迎使用食物语挂机脚本")
     print('''=============================================
@@ -51,6 +59,9 @@ def main():
             player = PlayerADB()
         elif str == "3":
             player = PlayerTest()
+        elif str == "4":
+            print("正在开发中")
+            continue
         else:
             continue
         if (player.init()): select()
@@ -58,19 +69,16 @@ def main():
 
 def select():
     while True:
-        print('''>>>----------< 挂 机 菜 单 >----------<<<
-1. 自动客潮(请将界面停留在餐厅)
-2. 自动小游戏(尚未编写)
-PS: 输入其他数字退出''')
-        select = input("请输入序号: ")
-        mode = None;
-        if (select == "1"):
-            mode = Modes.KECHAO
-        elif (select == "2"):
-            mode = Modes.HDXYX
-        else:
+        print(">>>----------< 挂 机 菜 单 >----------<<<")
+        for i in range(1, len(Modes) + 1):
+            print("{}. {}".format(i, descriptions[Modes(i)]))
+        print("PS: 输入其他数字退出")
+        try:
+            num = int(input("请输入序号: "))
+            mode = Modes(num)
+            run(mode)
+        except ValueError:
             break
-        run(mode)
     return
 
 def run(mode):
@@ -88,34 +96,33 @@ def run(mode):
     print("挂机脚本已运行完毕")
     return
 
-# 以下是具体挂机逻辑, 每次调用函数都应被视作挂机一次, 返回True将会继续, 如果想退出请返回False
-def kechao():
-    template = readimage("kechao")
-    theight, twidth = template.shape[:2] # test
-    key = 0
-    while key & 0xFF != 27:
+def execute(func, repeat = False):
+    # 向execute中传的函数若单次执行则返回值无用, 若多次执行则True为继续, False为停止
+    while True:
         start = time.time()
-
-        image = player.screenshot()
-        image = cv2.resize(image, None, fx = player.factor, fy = player.factor, interpolation = cv2.INTER_AREA)
-        points = findtemplate(image, template)
-        for x, y in points:
-            #cv2.circle(image, (x, y), 25, (0, 255, 0), 3)
-            cv2.rectangle(image, (x, y), (x + twidth, y + theight), (0, 255, 0), 3)
-        if (len(points) > 0):
-            x, y = random.choice(points)
-            player.clickaround(x / player.factor + 6, y / player.factor + 10)
-
-        cv2.imshow(WINDOW_NAME, image)
-
-        wait = int((1 / fps - (time.time() - start)) * 1000)
+        flag = func()
+        end = time.time()
+        wait = 1 / fps - (end - start)
         if wait < 0:
-            print("严重滞后, 发生了什么让你的电脑变慢呢? 时间 {} ms".format(-wait))
-            wait = 1
-        key = cv2.waitKey(wait)
+            print("严重滞后, 处理时间超出 {} ms, 发生了什么呢?".format(-int(wait * 1000)))
+            wait = 0
+        if (not repeat) or (not flag): return
+        time.sleep(wait)
     return
 
-def findtemplate(image, template):
+def onclicked(event, x, y, flags, param):
+    if event == cv2.EVENT_LBUTTONDOWN:
+        print("点击 X: {} Y: {}".format(x, y))
+        player.click(x / player.factor, y / player.factor)
+    return
+
+def showimage(image, wait = 1):
+    cv2.imshow(WINDOW_NAME, image)
+    cv2.setMouseCallback(WINDOW_NAME, onclicked)
+    cv2.waitKey(wait)
+    return
+
+def findtemplate(image, template, outline = False):
     theight, twidth = template.shape[:2]
     result = cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED)
     # result = cv2.normalize(result, None, 0, 1, cv2.NORM_MINMAX)
@@ -128,27 +135,54 @@ def findtemplate(image, template):
         if x - lx < twidth or y - ly < theight: continue
         points.append((x, y))
         lx, ly = x, y
+        if outline:
+            cv2.rectangle(image, pt, (pt[0] + twidth, pt[1] + theight), (0, 255, 0), 1)
     return points
 
-def onclicked(event, x, y, flags, param):
-    if event == cv2.EVENT_LBUTTONDOWN:
-        print("点击 X: {} Y: {}".format(x, y))
-        player.click(x / player.factor, y / player.factor)
-    return
+# 以下是具体挂机逻辑, 每次调用函数都应被视作挂机一次, 返回True将会继续, 如果想退出请返回False
+def kechao():
+    # 开始客潮
+    template = readimage("kechao_btn")
+    def runstart():
+
+        return False
+    execute(runstart, True)
+
+    # 客潮挂机
+    template = readimage("kechao_1")
+    def run():
+        image = player.screenshot()
+        image = cv2.resize(image, None, fx = player.factor, fy = player.factor, interpolation = cv2.INTER_AREA)
+        points = findtemplate(image, template, True)
+        for x, y in points:
+            cx, cy = x + 10, y + 15
+            cv2.circle(image, (cx, cy), 24, (0, 0, 255), 3)
+            player.clickaround(cx / player.factor, cy / player.factor)
+        #if (len(points) > 0):
+            #x, y = random.choice(points)
+        showimage(image)
+        return True
+    execute(run, True)
+
+    # 结束客潮
+
+
+    return True
 
 @atexit.register  
 def onexit():
     settitle("食物语挂机脚本已结束")
     if player != None: player.end()
-    print('''=============================================
+    print('''
+=============================================
 食物语挂机脚本已停止运行, 感谢您的使用, 再见!
 =============================================''')
     return
 
 def setnodpi():
-    try: # >= win 8.1
+    try: # >= windows 8.1
         ctypes.windll.shcore.SetProcessDpiAwareness(2)
-    except: # win 8.0 or less
+    except: # <= windows 8.0
         ctypes.windll.user32.SetProcessDPIAware()
     return
 

@@ -218,6 +218,7 @@ class PlayerTest(PlayerBase):
         return image
 
     def click(self, x, y):
+        x, y = int(x), int(y)
         print("自动点击 X: {} Y: {}".format(x, y))
         time.sleep(0.1)
         return
