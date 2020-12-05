@@ -144,7 +144,6 @@ class Player(PlayerBase):
         buffer = utils.screenshot(self.child)
         image = numpy.frombuffer(buffer, dtype = "uint8")
         image.shape = (self.height, self.width, 4)
-        cv2.cvtColor(image, cv2.COLOR_BGRA2RGB)
         return image
 
     def click(self, x, y):
@@ -220,7 +219,7 @@ class PlayerTest(PlayerBase):
     def click(self, x, y):
         x, y = int(x), int(y)
         print("自动点击 X: {} Y: {}".format(x, y))
-        time.sleep(0.1)
+        time.sleep(0.01)
         return
 
 def readimage(name):

@@ -139,34 +139,46 @@ def findtemplate(image, template, outline = False):
             cv2.rectangle(image, pt, (pt[0] + twidth, pt[1] + theight), (0, 255, 0), 1)
     return points
 
+def findcircle(image, r, outline = False):
+    gimg = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gimg = cv2.medianBlur(gimg, 5)
+    result = cv2.HoughCircles(gimg, cv2.HOUGH_GRADIENT, 1, int(r / 2), None, 100, 40, r - 10, r + 10)
+    points = []
+    # 寻找不到会返回None
+    if result is not None:
+        result = numpy.uint16(numpy.around(result))
+        for p in result[0,:]:
+            points.append((p[0], p[1]))
+            if outline:
+                cv2.circle(image, (p[0], p[1]), p[2], (0, 255, 0), 1)
+    return points
+
 # 以下是具体挂机逻辑, 每次调用函数都应被视作挂机一次, 返回True将会继续, 如果想退出请返回False
 def kechao():
     # 开始客潮
     template = readimage("kechao_btn")
-    def runstart():
+    def start():
 
         return False
-    execute(runstart, True)
-
     # 客潮挂机
-    template = readimage("kechao_1")
     def run():
         image = player.screenshot()
         image = cv2.resize(image, None, fx = player.factor, fy = player.factor, interpolation = cv2.INTER_AREA)
-        points = findtemplate(image, template, True)
+        points = findcircle(image, 25)
         for x, y in points:
-            cx, cy = x + 10, y + 15
-            cv2.circle(image, (cx, cy), 24, (0, 0, 255), 3)
-            player.clickaround(cx / player.factor, cy / player.factor)
-        #if (len(points) > 0):
-            #x, y = random.choice(points)
+            if x > (image.shape[1] * 0.9): continue
+            cv2.circle(image, (x, y), 25, (0, 0, 255), 3)
+            player.clickaround(x / player.factor, y / player.factor)
         showimage(image)
         return True
-    execute(run, True)
-
     # 结束客潮
+    def end():
 
-
+        return False
+    # 执行
+    execute(start, True)
+    execute(run, True)
+    execute(end, True)
     return True
 
 @atexit.register  
