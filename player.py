@@ -1,12 +1,15 @@
 # coding=utf-8
+
 import time
-import math
 import random
+import math
 import numpy
 import cv2
 import pyautogui
+import WindowsUtils as utils
 from ppadb.client import Client as ADBClient
-import utils
+from NaiveScrcpyClient import NaiveScrcpyClient as ScrcpyClient
+from ImageUtils import readimage, writeimage
 
 class PlayerBase(object):
     """模拟玩家操作的基类"""
@@ -32,7 +35,7 @@ class PlayerBase(object):
         return True
 
     def end(self):
-        """结束挂机"""
+        """执行释放操作"""
         cv2.destroyAllWindows()
         return
 
@@ -40,10 +43,21 @@ class PlayerBase(object):
         self.factor = self.wheight / self.height
         return
 
+    def screenshotraw(self):
+        """需要子类重写"""
+        return
+
     def screenshot(self):
+        image = self.screenshotraw()
+        image = cv2.resize(image, None, fx = self.factor, fy = self.factor, interpolation = cv2.INTER_AREA)
+        return image
+
+    def clickraw(self, x, y):
+        """需要子类重写"""
         return
 
     def click(self, x, y):
+        self.clickraw(x / self.factor, y / self.factor)
         return
 
     def clickaround(self, x, y):
@@ -85,7 +99,7 @@ class Player(PlayerBase):
         windows = [("TXGuiFoundation", "腾讯手游助手【极速傲引擎-7.1】"), ("StartupDui", "多屏协同"), ("SDL_app", None)]
         # 腾讯手游助手后台点击可用, 并且开放ADB端口5555, 然而获取截图时失败
         # 华为多屏协同疑似直接获取光标位置, 而非从消息里读取, 所以需要激活才行, 无法后台挂机
-        # Scrcpy后台挂机可用
+        # Scrcpy后台挂机可用(已经提供对scrcpy的原生支持, 建议使用原生模式)
         for (classname, windowname) in windows:
              self.window = utils.findwindow(None, classname, windowname)
              if self.window != 0: break
@@ -102,6 +116,7 @@ class Player(PlayerBase):
         print("已成功获取窗口句柄: {}".format(hex(self.window)))
         print("请在接下来打开的截图窗口中选择一个点以获取子窗口然后按任意键退出")
         print("若通过这种方式无法选中子窗口, 请直接在截图窗口按任意键退出并手动输入子窗口句柄")
+        hwnds = [self.window, self.child]
         title = "Click a point to select child window"
         width, height = utils.getsize(self.window)
         buffer = utils.screenshot(self.window)
@@ -109,11 +124,11 @@ class Player(PlayerBase):
         image.shape = (height, width, 4)
         cv2.cvtColor(image, cv2.COLOR_BGRA2RGB)
         cv2.namedWindow(title)
-        cv2.setMouseCallback(title, onclicked, [self.window])
+        cv2.setMouseCallback(title, onclicked, hwnds)
         cv2.imshow(title, image)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-        self.child = Temp
+        self.child = hwnds[1]
         if self.child == 0:
             print("遍历获取子窗口尚未编写, 请直接输入子窗口类名")
             classname = input("请输入子窗口类名: ")
@@ -140,25 +155,25 @@ class Player(PlayerBase):
         super().calcFactor()
         return
         
-    def screenshot(self):
+    def screenshotraw(self):
         buffer = utils.screenshot(self.child)
         image = numpy.frombuffer(buffer, dtype = "uint8")
         image.shape = (self.height, self.width, 4)
         return image
 
-    def click(self, x, y):
+    def clickraw(self, x, y):
         utils.click(self.child, int(x), int(y))
         return
 
 class PlayerADB(PlayerBase):
     """通过ADB控制手机"""
-    server = None
+    client = None
     device = None
 
     def init(self):
         super().init()
         # os.system("adb start-server")
-        client = ADBClient(host="127.0.0.1", port=5037)
+        self.client = ADBClient(host="127.0.0.1", port=5037)
         devices = []
         try:
             print("正在检测设备...")
@@ -187,18 +202,46 @@ class PlayerADB(PlayerBase):
         print("已计算缩放因子: {}".format(self.factor))
         return True
 
-    def screenshot(self):
+    def screenshotraw(self):
         buffer = self.device.screencap()
         image = numpy.frombuffer(buffer, dtype = "uint8")
         image = cv2.imdecode(image, cv2.IMREAD_COLOR)
         return image
 
-    def click(self, x, y):
+    def clickraw(self, x, y):
         self.device.input_tap(int(x), int(y))
         return
 
+class PlayerScrcpy(PlayerADB):
+    """使用scrcpy+ADB"""
+
+    def init(self):
+        super().init()
+        config = {
+            "max_size": 640,
+            "bit_rate": 2 ** 30,
+            "crop": "-",
+            "adb_path": "adb",
+            "adb_port": 61550,
+            "lib_path": "libs",
+            "buff_size": 0x10000,
+            "deque_length": 5
+        }
+        self.scrcpyClient = ScrcpyClient(config)
+        if self.scrcpyClient.start_loop() == 0:
+            return True
+        else:
+            return False
+
+    def end(self):
+        self.scrcpyClient.stop_loop()
+        super().end()
+
+    def screenshotraw(self):
+        return self.scrcpyClient.get_screen_frame()
+
 class PlayerTest(PlayerBase):
-    """测试图像识别"""
+    """图像识别测试"""
     path = None
 
     def init(self):
@@ -212,27 +255,18 @@ class PlayerTest(PlayerBase):
         print("已计算缩放因子: {}".format(self.factor))
         return True
 
-    def screenshot(self):
+    def screenshotraw(self):
         image = readimage(self.path)
         return image
 
-    def click(self, x, y):
+    def clickraw(self, x, y):
         x, y = int(x), int(y)
         print("自动点击 X: {} Y: {}".format(x, y))
         time.sleep(0.01)
         return
 
-def readimage(name):
-    return cv2.imread("./data/" + name + ".png", cv2.IMREAD_UNCHANGED)
-
-def writeimage(name, image):
-    cv2.imwrite("./data/screenshot_" + name + ".png", image, [int(cv2.IMWRITE_PNG_COMPRESSION), 3])
-    return
-
-Temp = 0
 def onclicked(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
-        global Temp
-        Temp = utils.getwindow(param[0], x, y)
-        print("已点击 X: {} Y: {} 窗口句柄: {}".format(x, y, hex(Temp)))
+        param[1] = utils.getwindow(param[0], x, y)
+        print("已点击 X: {} Y: {} 窗口句柄: {}".format(x, y, hex(param[1])))
     return

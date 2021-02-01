@@ -3,4 +3,4 @@
 
 图片资源映射表
 cta_09.png -> kechao_btn.png
-cta_04.png -> kechao_1.png
+cta_04.png -> kechao_dish.png
