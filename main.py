@@ -68,6 +68,7 @@ def select():
         print("PS: 输入其他数字退出")
         try:
             num = int(input("请输入序号: "))
+            if num <= 0: break
             global task
             task = getTasks()[num - 1]()
             run()
