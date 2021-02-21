@@ -6,117 +6,126 @@ import random
 import math
 import numpy
 import cv2
-from ImageUtils import readimage
+from utils import readimage
 
 class Phases(IntEnum):
+    """任务执行的阶段"""
     BEGIN = 0
     RUNNING = 1
     END = 2
 
 class Results(Enum):
+    """任务执行的结果"""
     PASS = auto()
     SUCCESS = auto()
     FAIL = auto()
 
 tasks = []
-image = None
+
+def getTasks():
+    """获取任务列表"""
+    return tasks
+
+def registerTask(task, name, desc):
+    """注册任务(已弃用,请使用装饰器注册任务)"""
+    task.name = name
+    task.description = desc
+    tasks.append(task)
+    return
+
+def Task(name, desc):
+    """用于自动注册任务的装饰器"""
+    def decorator(cls):
+        registerTask(cls, name, desc)
+        return cls
+    return decorator
 
 class TaskBase(object):
     """自动挂机任务的基类"""
     name = ""
     description = ""
 
-    def __init__(self, name, desc):
-        self.name = name
-        self.description = desc
+    def __init__(self):
+        """初始化"""
+        self.image = None
         return
 
-    def init(self):
-        return
-
-    def begin(self, player):
+    def begin(self, player, t):
         """开始任务"""
         return Results.FAIL
 
-    def run(self, player):
+    def run(self, player, t):
         """执行任务"""
-        return Results.PASS
+        return Results.FAIL
 
-    def end(self, player):
+    def end(self, player, t):
         """结束任务"""
-        return Results.PASS
+        return Results.FAIL
 
+    def getImageCache(self):
+        """获取用于预览的图像,如果不想显示请返回None"""
+        return self.image
+
+@Task("自动客潮", "请将界面停留在餐厅")
 class TaskKeChao(TaskBase):
     """客潮自动化"""
-    def __init__(self, name, desc):
-        super().__init__(name, desc)
+    def __init__(self):
+        super().__init__()
         self.templateButton = readimage("kechao_btn")
         self.templateDish = readimage("kechao_dish_part")
-        self.templateTitle = readimage("kechao_title")
-        return
+        self.templateTitle = readimage("kechao_title_part")
 
-    def init(self):
-        self.watchdog = time.time()
+        self.lastTime = 0
         self.dialog = False
         self.pointCache = []
         return
 
-    def begin(self, player):
+    def begin(self, player, t):
         """需要玩家位于餐厅界面"""
-        global image
-        image = player.screenshot()
+        self.image = player.screenshot()
         if not self.dialog:
-            points = findcircle(image, 25)
+            points = findcircle(self.image, 25)
             for x, y in points:
-                if x > (image.shape[1] * 0.9) and y < (image.shape[0] * 0.2):
+                if x > (self.image.shape[1] * 0.9) and y < (self.image.shape[0] * 0.2):
                     player.clickaround(x, y)
                     self.dialog = True
         else:
-            points = findtemplate(image, self.templateButton)
+            points = findtemplate(self.image, self.templateButton)
             for x, y in points:
                 player.clickaround(x, y)
                 time.sleep(1)
                 return Results.SUCCESS
         return Results.PASS
 
-    def run(self, player):
+    def run(self, player, t):
         """客潮挂机中"""
-        global image
-        image = player.screenshot()
-        points = findcircle(image, 25)
+        self.image = player.screenshot()
+        points = findcircle(self.image, 25)
         points2 = []
         for x, y in points:
-            if x > (image.shape[1] * 0.9): continue
-            if y > (image.shape[0] * 0.8): return Results.SUCCESS
-            cv2.circle(image, (x, y), 25, (0, 0, 255), 3)
+            if x > (self.image.shape[1] * 0.9): continue
+            if y > (self.image.shape[0] * 0.8): return Results.SUCCESS
+            cv2.circle(self.image, (x, y), 25, (0, 0, 255), 3)
             points2.append((x, y))
         if len(points2) > 0:
             x, y = random.choice(points2)
             player.clickaround(x, y)
         return Results.PASS
 
-    def end(self, player):
+    def end(self, player, t):
         """结束客潮"""
-        global image
-        image = player.screenshot()
-        points = findtemplate(image, self.templateTitle)
+        self.image = player.screenshot()
+        points = findtemplate(self.image, self.templateTitle)
         for x, y in points:
+            time.sleep(2)
             player.clickaround(x, y)
-            time.sleep(1)
+            time.sleep(2)
             return Results.SUCCESS
         return Results.PASS
 
+@Task("自动小游戏", "尚未编写")
 class TaskMiniGames(TaskBase):
     """活动小游戏 算了放弃了 毁灭吧赶紧的"""
-
-def registerTasks():
-    tasks.clear()
-    tasks.append(TaskKeChao("自动客潮", "请将界面停留在餐厅"))
-    tasks.append(TaskMiniGames("自动小游戏", "尚未编写"))
-    return
-
-def getImageCache():
-    return image
 
 def findtemplate(image, template, threshold = 0.75, outline = False):
     theight, twidth = template.shape[:2]

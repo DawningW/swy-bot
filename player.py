@@ -6,10 +6,10 @@ import math
 import numpy
 import cv2
 import pyautogui
-import WindowsUtils as utils
+import windows
 from ppadb.client import Client as ADBClient
-from NaiveScrcpyClient import NaiveScrcpyClient as ScrcpyClient
-from ImageUtils import readimage, writeimage
+from scrcpy import ScrcpyClient
+from utils import readimage, writeimage
 
 class PlayerBase(object):
     """模拟玩家操作的基类"""
@@ -96,12 +96,12 @@ class Player(PlayerBase):
 
     def init(self):
         super().init()
-        windows = [("TXGuiFoundation", "腾讯手游助手【极速傲引擎-7.1】"), ("StartupDui", "多屏协同"), ("SDL_app", None)]
+        windowsList = [("TXGuiFoundation", "腾讯手游助手【极速傲引擎-7.1】"), ("StartupDui", "多屏协同"), ("SDL_app", None)]
         # 腾讯手游助手后台点击可用, 并且开放ADB端口5555, 然而获取截图时失败
         # 华为多屏协同疑似直接获取光标位置, 而非从消息里读取, 所以需要激活才行, 无法后台挂机
-        # Scrcpy后台挂机可用(已经提供对scrcpy的原生支持, 建议使用原生模式)
-        for (classname, windowname) in windows:
-             self.window = utils.findwindow(None, classname, windowname)
+        # Scrcpy后台挂机可用(已经提供对Scrcpy的原生支持, 建议使用Scrcpy模式)
+        for (classname, windowname) in windowsList:
+             self.window = windows.findwindow(None, classname, windowname)
              if self.window != 0: break
         if self.window == 0:
             print("无法自动获取游戏窗口, 请手动获取(可以用VS的SPY++工具获取)")
@@ -109,7 +109,7 @@ class Player(PlayerBase):
             windowname = input("请输入窗口标题: ")
             if classname == "": classname = None
             if windowname == "": windowname = None
-            self.window = utils.findwindow(None, classname, windowname)
+            self.window = windows.findwindow(None, classname, windowname)
             if (self.window == 0):
                 print("错误: 无法获取窗口句柄")
                 return False
@@ -118,8 +118,8 @@ class Player(PlayerBase):
         print("若通过这种方式无法选中子窗口, 请直接在截图窗口按任意键退出并手动输入子窗口句柄")
         hwnds = [self.window, self.child]
         title = "Click a point to select child window"
-        width, height = utils.getsize(self.window)
-        buffer = utils.screenshot(self.window)
+        width, height = windows.getsize(self.window)
+        buffer = windows.screenshot(self.window)
         image = numpy.frombuffer(buffer, dtype = "uint8")
         image.shape = (height, width, 4)
         cv2.cvtColor(image, cv2.COLOR_BGRA2RGB)
@@ -132,14 +132,14 @@ class Player(PlayerBase):
         if self.child == 0:
             print("遍历获取子窗口尚未编写, 请直接输入子窗口类名")
             classname = input("请输入子窗口类名: ")
-            if classname != '': self.child = utils.findwindow(self.window, classname, None)
+            if classname != '': self.child = windows.findwindow(self.window, classname, None)
             if self.child == 0:
                 print("还是失败的话请直接输入句柄吧...")
                 str = input("请输入子窗口句柄(16进制): ")
                 if str == '': self.child = self.window
                 else: self.child = int(str, 16)
         print("已成功获取子窗口句柄: {}".format(hex(self.child)))
-        self.width, self.height = utils.getsize(self.child)
+        self.width, self.height = windows.getsize(self.child)
         print("已获得模拟器窗口大小: {} X {}".format(self.width, self.height))
         self.calcFactor()
         print("已计算缩放因子: {}".format(self.factor))
@@ -149,20 +149,20 @@ class Player(PlayerBase):
     def calcFactor(self):
         # TODO DPI适配
         # 算了我写不出来, 那就别适配了= =
-        # dpi = utils.getdpi(self.window)
+        # dpi = windows.getdpi(self.window)
         # self.width = int(self.width * dpi['x'] / 96)
         # self.height = int(self.height * dpi['y'] / 96)
         super().calcFactor()
         return
         
     def screenshotraw(self):
-        buffer = utils.screenshot(self.child)
+        buffer = windows.screenshot(self.child)
         image = numpy.frombuffer(buffer, dtype = "uint8")
         image.shape = (self.height, self.width, 4)
         return image
 
     def clickraw(self, x, y):
-        utils.click(self.child, int(x), int(y))
+        windows.click(self.child, int(x), int(y), True)
         return
 
 class PlayerADB(PlayerBase):
@@ -212,33 +212,37 @@ class PlayerADB(PlayerBase):
         self.device.input_tap(int(x), int(y))
         return
 
-class PlayerScrcpy(PlayerADB):
-    """使用scrcpy+ADB"""
+class PlayerScrcpy(PlayerBase):
+    """使用Scrcpy获取截屏并模拟点击"""
 
     def init(self):
         super().init()
-        config = {
-            "max_size": 640,
-            "bit_rate": 2 ** 30,
-            "crop": "-",
-            "adb_path": "adb",
-            "adb_port": 61550,
-            "lib_path": "libs",
-            "buff_size": 0x10000,
-            "deque_length": 5
-        }
-        self.scrcpyClient = ScrcpyClient(config)
-        if self.scrcpyClient.start_loop() == 0:
-            return True
-        else:
+        self.client = ScrcpyClient()
+        if not self.client.start():
+            print("连接失败")
             return False
+        print("已成功连接至设备 {}".format(self.client.device_name))
+        self.width, self.height = self.client.resolution
+        print("已获得设备屏幕尺寸: {} X {}".format(self.width, self.height))
+        self.calcFactor()
+        print("已计算缩放因子: {}".format(self.factor))
+        return True
 
     def end(self):
-        self.scrcpyClient.stop_loop()
+        self.client.stop()
         super().end()
+        return
 
     def screenshotraw(self):
-        return self.scrcpyClient.get_screen_frame()
+        image = self.client.get_next_frame(True)
+        if image is not None:
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
+            self.lastimage = image
+        return self.lastimage
+
+    def clickraw(self, x, y):
+        self.client.tap(x, y)
+        return
 
 class PlayerTest(PlayerBase):
     """图像识别测试"""
@@ -267,6 +271,6 @@ class PlayerTest(PlayerBase):
 
 def onclicked(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
-        param[1] = utils.getwindow(param[0], x, y)
+        param[1] = windows.getwindow(param[0], x, y)
         print("已点击 X: {} Y: {} 窗口句柄: {}".format(x, y, hex(param[1])))
     return

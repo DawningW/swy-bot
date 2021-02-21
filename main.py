@@ -7,7 +7,7 @@ import ctypes
 import atexit
 import cv2
 from player import Player, PlayerADB, PlayerScrcpy, PlayerTest
-from task import Phases, Results, tasks, registerTasks, getImageCache
+from task import Phases, Results, getTasks
 
 WINDOW_NAME = "Preview Window"
 FPS = 5
@@ -16,21 +16,20 @@ player = None
 task = None
 
 def main():
-    registerTasks()
     setnodpi()
     settitle("欢迎使用食物语挂机脚本")
     print('''=============================================
-食物语挂机脚本 V1.2 作者: WC
+食物语挂机脚本 V1.3 作者: WC
 本脚本仅供个人代肝使用, 严禁用于商业用途
 使用本脚本造成的一切法律纠纷由使用者自行承担
 项目地址: https://github.com/DawningW/swy-bot
-欢迎提交问题或是直接PR
+欢迎提交问题或者直接PR
 =============================================''')
     while True:
         print('''>>>----------< 主 菜 单 >----------<<<
 1. 原生模式(需先启动安卓虚拟机并打开食物语)
 2. ADB模式(需手机连接电脑开启调试模式并打开食物语)
-3. 混合模式(使用scrcpy快速获取手机截屏并用ADB实现模拟点击)
+3. 混合模式(使用scrcpy快速获取手机截屏并模拟点击)(*推荐*)
 4. 调试模式(将读取程序目录下的test.png并进行图像识别)
 8. 线性规划做菜计算器
 9. 用默认浏览器打开食物语wiki
@@ -64,15 +63,15 @@ def main():
 def select():
     while True:
         print(">>>----------< 挂 机 菜 单 >----------<<<")
-        for i in range(len(tasks)):
-            print("{}. {}({})".format(i + 1, tasks[i].name, tasks[i].description))
+        for i in range(len(getTasks())):
+            print("{}. {}({})".format(i + 1, getTasks()[i].name, getTasks()[i].description))
         print("PS: 输入其他数字退出")
         try:
             num = int(input("请输入序号: "))
             global task
-            task = tasks[num - 1]
-            task.init()
+            task = getTasks()[num - 1]()
             run()
+            task = None
         except (ValueError, IndexError):
             break
     return
@@ -87,16 +86,17 @@ def run():
     while not canceled:
         times += 1
         print("第 {} 次运行脚本: {}".format(times, task.name))
+        origin = time.perf_counter()
         phase = Phases.BEGIN
         while True:
-            t = time.time()
+            t = time.perf_counter()
             result = None
             if phase == Phases.BEGIN:
-                result = task.begin(player)
+                result = task.begin(player, t - origin)
             elif phase == Phases.RUNNING:
-                result = task.run(player)
+                result = task.run(player, t - origin)
             elif phase == Phases.END:
-                result = task.end(player)
+                result = task.end(player, t - origin)
             else:
                 print("无效的阶段, 请向作者报告这个问题")
             if result is None or result == Results.FAIL:
@@ -106,14 +106,15 @@ def run():
                 value = phase.value + 1
                 if value > Phases.END.value: break
                 else: phase = Phases(value)
-            showimage(getImageCache())
-            wait = 1 / FPS - (time.time() - t)
+            if task.getImageCache() is not None:
+                showimage(task.getImageCache())
+            wait = 1 / FPS - (time.perf_counter() - t)
             if wait < 0:
                 print("严重滞后, 处理时间超出 {} ms, 发生了什么呢?".format(-int(wait * 1000)))
                 wait = 0
             time.sleep(wait)
     cv2.destroyAllWindows()
-    settitle("当前挂机脚本已运行完毕 - 准备就绪")
+    settitle("食物语挂机脚本已运行完毕 - 准备就绪")
     print("挂机脚本已运行完毕")
     return
 
@@ -132,7 +133,7 @@ def showimage(image, wait = 1):
 @atexit.register  
 def onexit():
     settitle("食物语挂机脚本已结束")
-    if player != None: player.end()
+    if player is not None: player.end()
     print('''
 =============================================
 食物语挂机脚本已停止运行, 感谢您的使用, 再见!

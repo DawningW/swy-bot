@@ -37,21 +37,22 @@
     <Content Include="requirements.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FFmpegWrapper.py" />
-    <Compile Include="ImageUtils.py">
+    <Compile Include="scrcpy.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="utils.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="main.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="NaiveScrcpyClient.py" />
     <Compile Include="player.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="task.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="WindowsUtils.py">
+    <Compile Include="windows.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

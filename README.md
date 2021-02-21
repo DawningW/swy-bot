@@ -2,7 +2,7 @@
 # 食物语自动挂机脚本
 
 ## 简介
-食物语自动挂机脚本, 主要用于客潮和活动小游戏
+食物语自动挂机脚本, 主要用于客潮~~和活动小游戏~~(太难做砍掉了绝对不是因为我懒啊啊啊啊啊啊)
 
 有计划加入食物语做菜优化, 引用[此项目](https://github.com/ic30rs/swy_profit)
 
@@ -13,18 +13,21 @@ PSS: 那个活动的跑酷恶心死我了啊啊啊啊
 ## 食用方式
 详见程序内指引
 
-注意若使用ADB请先确保电脑已安装ADB, 并已连接至手机
+**注意:** 若使用ADB(Scrcpy模式), 请确保系统环境变量中有ADB, 并且ADB已连接至手机
 
-混合模式还需将scrcpy的服务端和FFmpeg的动态链接库放至libs目录下, 详见[这里](https://github.com/LostXine/naive-scrcpy-client#to-start)
+## 改良菜谱
+目前本项目仅能在Windows上运行, 但经过简单修改就能在mac和linux上运行(~~不过我懒~~
 
-*嫌麻烦的话直接下载scrcpy放到libs目录就好啦 (逃*
+另外本挂机脚本实际上提供了一个框架, 经过简单修改应该也能用于其他游戏, 甚至是用于训练人工智能玩游戏(逃
+
+本项目欢迎各位空桑少主贡献代码
 
 ## 食材
 - opencv-python
-- pywin32
-- PyAutoGUI
+- PyAV
+- pywin32(仅限Windows)
+- PyAutoGUI(Windows上不需要)
 - pure-python-adb
-- naive-scrcpy-client(本项目自带)
 - pyinstaller(如需要打包)
 
 详见requirements.txt
@@ -32,8 +35,28 @@ PSS: 那个活动的跑酷恶心死我了啊啊啊啊
 ## 烹饪日记
 2020/10/27 项目开始开发
 
-## 厨师们
-详见contributor.md
+2020/11/3 实现ADB模式
+
+2020/11/5 实现Windows原生模式
+
+2020/12/5 客潮挂机从模板匹配改为识别圆
+
+2021/2/1 大规模重构代码, 增加挂机任务类, 增加使用Scrcpy的模式(未完成), 更新版本号至V1.2
+
+2021/2/21 使用装饰器注册挂机任务, 完成Scrcpy模式, 更新版本号至V1.3
+
+## 厨师
+详见CONTRIBUTOR.md
+
+## 特别致谢
+所有第三方库的开发者
+
+Scrcpy功能参考自:
+- [py-scrcpy](https://github.com/Allong12/py-scrcpy)
+- [naive-scrcpy-client](https://github.com/LostXine/naive-scrcpy-client)
+- [android_autoclicker](https://github.com/JKookaburra/android_autoclicker)
+
+感谢以上项目的开发者
 
 ## 版权信息
 本项目以MIT协议开源
