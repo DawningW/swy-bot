@@ -19,7 +19,7 @@ def main():
     setnodpi()
     settitle("欢迎使用食物语挂机脚本")
     print('''=============================================
-食物语挂机脚本 V1.3 作者: WC
+食物语挂机脚本 V1.4 作者: WC
 本脚本仅供个人代肝使用, 严禁用于商业用途
 使用本脚本造成的一切法律纠纷由使用者自行承担
 项目地址: https://github.com/DawningW/swy-bot
@@ -31,8 +31,9 @@ def main():
 2. ADB模式(需手机连接电脑开启调试模式并打开食物语)
 3. 混合模式(使用scrcpy快速获取手机截屏并模拟点击)(*推荐*)
 4. 调试模式(将读取程序目录下的test.png并进行图像识别)
-8. 线性规划做菜计算器
-9. 用默认浏览器打开食物语wiki
+7. 线性规划做菜计算器
+8. 用默认浏览器打开食物语wiki
+9. 打开截图文件夹
 0. 退出''')
         str = input("请选择: ")
         global player
@@ -46,11 +47,14 @@ def main():
             player = PlayerScrcpy()
         elif str == "4":
             player = PlayerTest()
-        elif str == "8":
+        elif str == "7":
             print("正在开发中")
             continue
-        elif str == "9":
+        elif str == "8":
             os.system("start https://wiki.biligame.com/swy");
+            continue
+        elif str == "9":
+            os.system("start saved");
             continue
         else:
             continue
@@ -87,6 +91,7 @@ def run():
     while not canceled:
         times += 1
         print("第 {} 次运行脚本: {}".format(times, task.name))
+        task.init()
         origin = time.perf_counter()
         phase = Phases.BEGIN
         while True:

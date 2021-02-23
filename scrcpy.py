@@ -33,6 +33,7 @@ class ScrcpyClient(object):
         :param max_size: frame width that will be broadcast from android server
         :param bit_rate:
         :param max_fps: 0 means not max fps
+        :param crop:
         :param libs_path: path to 'scrcpy-server.jar'
         :param adb_path: path to ADB
         :param ip: scrcpy server IP

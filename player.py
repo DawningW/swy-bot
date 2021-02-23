@@ -217,7 +217,7 @@ class PlayerScrcpy(PlayerBase):
 
     def init(self):
         super().init()
-        self.client = ScrcpyClient()
+        self.client = ScrcpyClient(max_fps=30, queue_length=2)
         if not self.client.start():
             print("连接失败")
             return False
