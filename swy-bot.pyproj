@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{e698f192-e2e3-4f1f-aff7-fe35d82ad9f4}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>profit.py</StartupFile>
+    <StartupFile>main.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>

@@ -1,6 +1,7 @@
 # coding=utf-8
 
 from enum import Enum, auto
+import math
 import time
 import pulp
 import swy
@@ -50,7 +51,7 @@ def calculate(foods, materials, cooks, goal=Goals.MAX_MONEY):
     obj_time = pulp.lpSum([foods[i].time * variables[i] for i in range(VAR_NUM)])
     # 总消耗食材h(x, y, z, ...)=各菜肴烹饪数量乘以消耗食材量的总和
     obj_consumption = pulp.lpSum(consumptions)
-    # 加权
+    # 加权 TODO 尝试其他将多目标线性规划转为单目标的方法?
     objective = obj_money / 15_0000 + obj_consumption / sum(materials)
     
     problem = pulp.LpProblem("swy_problem", pulp.LpMaximize)
@@ -62,7 +63,6 @@ def calculate(foods, materials, cooks, goal=Goals.MAX_MONEY):
         problem.setObjective(obj_money)
     elif goal == Goals.MAX_TIME:
         problem.setObjective(obj_time)
-        print("由于最大时间没有什么意义, 因此不建议使用")
     elif goal == Goals.MAX_CONSUMPTION:
         problem.setObjective(obj_consumption)
     elif goal == Goals.ALL:
@@ -86,7 +86,8 @@ def calculate(foods, materials, cooks, goal=Goals.MAX_MONEY):
     temp.sort(key=lambda x: x["time"], reverse=True)
     result = [None] * len(temp)
     for index, item in enumerate(temp):
-        item["time"] *= mapping[index][1]
+        # TODO 游戏实际是把菜和食魂的百分比缩减加在一起的, 我写成乘法了
+        item["time"] = math.ceil(item["time"] * mapping[index][1])
         result[mapping[index][0]] = item
     rest_materials = [material - int(pulp.value(exp)) for material, exp in zip(materials, consumptions)]
     return result, int(pulp.value(obj_money)), rest_materials

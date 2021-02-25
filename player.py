@@ -89,6 +89,15 @@ class PlayerBase(object):
         self.click(x + dx, y + dy)
         return
 
+# 腾讯手游助手后台点击可用, 并且开放ADB端口5555, 然而获取截图时失败
+# 华为多屏协同疑似直接获取光标位置, 而非从消息里读取, 所以需要激活才行, 无法后台挂机
+# Scrcpy后台挂机可用(已经提供对Scrcpy的原生支持, 建议使用混合模式)
+WINDOWS_LIST = [
+    ("TXGuiFoundation", "腾讯手游助手【极速傲引擎-7.1】"),
+    ("StartupDui", "多屏协同"),
+    ("SDL_app", None)
+]
+
 class Player(PlayerBase):
     """模拟鼠标点击窗口"""
     window = 0
@@ -96,14 +105,12 @@ class Player(PlayerBase):
 
     def init(self):
         super().init()
-        # TODO 这个list拿出来, 增加Scrcpy的提示
-        windowsList = [("TXGuiFoundation", "腾讯手游助手【极速傲引擎-7.1】"), ("StartupDui", "多屏协同"), ("SDL_app", None)]
-        # 腾讯手游助手后台点击可用, 并且开放ADB端口5555, 然而获取截图时失败
-        # 华为多屏协同疑似直接获取光标位置, 而非从消息里读取, 所以需要激活才行, 无法后台挂机
-        # Scrcpy后台挂机可用(已经提供对Scrcpy的原生支持, 建议使用Scrcpy模式)
-        for (classname, windowname) in windowsList:
-             self.window = windows.findwindow(None, classname, windowname)
-             if self.window != 0: break
+        for classname, windowname in WINDOWS_LIST:
+            self.window = windows.findwindow(None, classname, windowname)
+            if self.window != 0:
+                if classname == WINDOWS_LIST[-1][0]:
+                    print("**现已提供对Scrcpy的原生支持, 无需打开Scrcpy, 详见主菜单中的混合模式**")
+                break
         if self.window == 0:
             print("无法自动获取游戏窗口, 请手动获取(可以用VS的SPY++工具获取)")
             classname = input("请输入窗口类名: ")
