@@ -30,6 +30,8 @@ class ScrcpyClient(object):
                     libs_path='libs', adb_path=r'adb', ip='127.0.0.1', port=27199,
                     queue_length=5):
         """
+        初始化Scrcpy客户端
+
         :param max_size: frame width that will be broadcast from android server
         :param bit_rate:
         :param max_fps: 0 means not max fps

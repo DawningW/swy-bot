@@ -96,6 +96,7 @@ class Player(PlayerBase):
 
     def init(self):
         super().init()
+        # TODO 这个list拿出来, 增加Scrcpy的提示
         windowsList = [("TXGuiFoundation", "腾讯手游助手【极速傲引擎-7.1】"), ("StartupDui", "多屏协同"), ("SDL_app", None)]
         # 腾讯手游助手后台点击可用, 并且开放ADB端口5555, 然而获取截图时失败
         # 华为多屏协同疑似直接获取光标位置, 而非从消息里读取, 所以需要激活才行, 无法后台挂机

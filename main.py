@@ -8,6 +8,7 @@ import atexit
 import cv2
 from player import Player, PlayerADB, PlayerScrcpy, PlayerTest
 from task import Phases, Results, getTasks
+import profit
 
 WINDOW_NAME = "Preview Window"
 FPS = 5
@@ -48,7 +49,7 @@ def main():
         elif str == "4":
             player = PlayerTest()
         elif str == "7":
-            print("正在开发中")
+            profit.run()
             continue
         elif str == "8":
             os.system("start https://wiki.biligame.com/swy");

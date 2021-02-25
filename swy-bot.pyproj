@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{e698f192-e2e3-4f1f-aff7-fe35d82ad9f4}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>main.py</StartupFile>
+    <StartupFile>profit.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -37,7 +37,13 @@
     <Content Include="requirements.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="profit.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="scrcpy.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="swy.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="utils.py">
