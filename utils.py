@@ -1,5 +1,6 @@
 # coding=utf-8
 
+import sys
 import cv2
 
 def timeToSecond(time: str) -> int:
@@ -15,6 +16,9 @@ def secondToTime(second: int) -> str:
     hour = int(minute / 60)
     minute %= 60
     return "%02d:%02d:%02d" % (hour, minute, second)
+
+def isPacked():
+    return hasattr(sys, 'frozen')
 
 def readimage(name):
     return cv2.imread("./data/" + name + ".png", cv2.IMREAD_UNCHANGED)

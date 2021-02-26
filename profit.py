@@ -93,6 +93,7 @@ def calculate(foods, materials, cooks, goal=Goals.MAX_MONEY):
     return result, int(pulp.value(obj_money)), rest_materials
 
 def run():
+    # pulp.LpSolverDefault = pulp.COIN_CMD(path="./libs/cbc.exe")
     print("欢迎使用食物语线性规划做菜计算器")
     print("原作者ic30rs, 现由WC维护")
     foods = swy.readFoods()
