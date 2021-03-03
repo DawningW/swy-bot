@@ -6,13 +6,18 @@
 
 现已加入食物语线性规划做菜计算器, 但处于早期测试阶段, 如遇bug请提交issue
 
-**空桑好, 策划爬**
+祝各位少主都能把喜欢的菜男人抱回家!
+![双御.png](https://i.loli.net/2021/03/03/SpvI6GisAyPa8Dg.png)
 
+<!-- **空桑好, 策划爬** -->
+
+---
 ## 食用方式
 详见程序内指引
 
 **注意:** 若使用ADB(Scrcpy模式), 请确保系统环境变量中有ADB, 并且ADB已连接至手机
 
+---
 ## 食材
 - Python3
 - opencv-python
@@ -25,6 +30,7 @@
 
 详见requirements.txt
 
+---
 ## 菜谱&改良
 目前本项目仅能在Windows上运行, 但经过简单修改就能在mac和linux上运行(~~不过我懒~~
 
@@ -57,13 +63,15 @@
 
 另外烹饪时间出现小数的话只有入没有舍, 是ceil
 
+---
 ## 烹饪
 1. 克隆仓库到本地
-2. 准备好食材
-3. 运行main.py
-4. 如需构建, 请使用pyinstaller
-5. 随心所欲地修改菜谱
+1. 准备好食材
+1. 运行main.py
+1. 如需构建, 请使用pyinstaller
+1. 随心所欲地修改菜谱
 
+---
 ## 烹饪日记
 <details>
 <summary>展开查看</summary>
@@ -80,9 +88,11 @@
 </pre>
 </details>
 
+---
 ## 厨师
 详见CONTRIBUTOR.md
 
+---
 ## 特别致谢
 所有第三方库的开发者
 
@@ -98,6 +108,7 @@ Scrcpy功能参考自:
 
 以及这篇Python线性规划库PuLP教程: [PuLP简介](https://fancyerii.github.io/2020/04/18/pulp/)
 
+---
 ## 版权信息
 本项目以MIT协议开源
 
