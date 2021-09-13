@@ -1,7 +1,7 @@
 # coding=utf-8
 
 from enum import Enum, IntEnum, auto
-from utils import timeToSecond, secondToTime
+from utils import timetosecond, secondtotime
 
 class Rarities(Enum):
     """稀有度"""
@@ -46,7 +46,7 @@ def readFoods() -> list:
                 name = values[0]
                 rarity = Rarities(values[1])
                 price = int(values[2])
-                time = timeToSecond(values[3])
+                time = timetosecond(values[3])
                 consumptions = [int(values[i + 4]) for i in range(len(Ingredients))]
                 foods.append(Food(name, rarity, price, time, consumptions))
     return foods
@@ -56,4 +56,4 @@ if __name__ == "__main__":
     print("读取菜单")
     readFoods()
     for food in foods:
-        print("%s(%s)   \t售价: %d  \t烹饪时间: %s(%d秒)  \t消耗食材: %s" % (food.name, food.rarity.value, food.price, secondToTime(food.time), food.time, str(food.consumptions)))
+        print("%s(%s)   \t售价: %d  \t烹饪时间: %s(%d秒)  \t消耗食材: %s" % (food.name, food.rarity.value, food.price, secondtotime(food.time), food.time, str(food.consumptions)))

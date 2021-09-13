@@ -22,17 +22,17 @@
 - Python3
 - opencv-python
 - PyAV
-- pywin32(仅限Windows)
-- PyAutoGUI(Windows上不需要)
+- pywin32(仅Windows上需要)
+- PyAutoGUI(仅Windows以外的系统需要)
 - pure-python-adb
 - PuLP
 - pyinstaller(如需要打包)
 
-详见requirements.txt
+详见requirements.txt(已过时, 尚未更新)
 
 ---
 ## 菜谱&改良
-目前本项目仅能在Windows上运行, 但经过简单修改就能在mac和linux上运行(~~不过我懒~~
+本项目需要在Windows上运行, 目前正在编写对Linux和MacOS的支持
 
 另外本挂机脚本实际上提供了一个框架, 经过简单修改应该也能用于其他游戏, 甚至是用于训练人工智能玩游戏(逃
 
@@ -45,10 +45,13 @@
 - main.py 主文件
 - player.py 负责与游戏交互(通过原生窗口/ADB/Scrcpy)
 - task.py 执行挂机任务
-- windows.py 与Windows交互
+- platforms/ 工具模块的平台相关实现
+    - windows.py Windows系统相关实现
+    - linux.py Linux系统相关实现
 - utils.py 工具模块
 - swy.py 负责加载游戏数据
 - profit.py 线性规划做菜计算器
+- matching.py 自动连连看算法(原作者TheThreeDog)
 
 ### 自动挂机
 详见player.py和task.py
@@ -63,13 +66,16 @@
 
 另外烹饪时间出现小数的话只有入没有舍, 是ceil
 
+### 自动连连看
+由于某些原因, 本项目仅提供用于学习的算法, 不包含配置, 请自行配置
+
 ---
-## 烹饪
-1. 克隆仓库到本地
-1. 准备好食材
-1. 运行main.py
-1. 如需构建, 请使用pyinstaller
-1. 随心所欲地修改菜谱
+## 如何烹饪
+1. 拿走菜谱(克隆仓库到本地)
+1. 准备好食材(安装第三方库)
+1. 开始做菜(运行main.py)
+1. 装盘(如需构建, 请使用pyinstaller)
+1. 随心所欲地修改菜谱(请随意修改代码)
 
 ---
 ## 烹饪日记
@@ -85,12 +91,13 @@
 2021/2/23 重做客潮挂机任务, 更新版本号至V1.4
 2021/2/25 新增swy.py用于加载游戏数据, 初步实现线性规划做菜计算器
 2021/2/26 更新菜肴数据为计算缩减后的烹饪时间, 更新版本号至V1.5
+2021/9/13 加入自动连连看算法, 初步支持Linux
 </pre>
 </details>
 
 ---
-## 厨师
-详见CONTRIBUTOR.md
+## 厨师们
+详见 [Contributors](https://github.com/DawningW/swy-bot/graphs/contributors)
 
 ---
 ## 特别致谢
@@ -104,13 +111,16 @@ Scrcpy功能参考自:
 线性规划做菜计算器参考自:
 - [swy_profit](https://github.com/ic30rs/swy_profit)
 
+自动连连看算法来自:
+- [Auto-Lianliankan](https://github.com/TheThreeDog/Auto-Lianliankan)
+
 感谢以上项目的开发者
 
 以及这篇Python线性规划库PuLP教程: [PuLP简介](https://fancyerii.github.io/2020/04/18/pulp/)
 
 ---
 ## 版权信息
-本项目以MIT协议开源
+本项目以MIT协议开源, 引用的代码仍按照原协议开源
 
 仅供学习交流, 严禁用于盈利
 

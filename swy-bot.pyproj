@@ -37,6 +37,10 @@
     <Content Include="requirements.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="matching.py" />
+    <Compile Include="platforms\linux.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="profit.py">
       <SubType>Code</SubType>
     </Compile>
@@ -58,12 +62,15 @@
     <Compile Include="task.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="windows.py">
+    <Compile Include="platforms\windows.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|PythonCore|3.7" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="platforms\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

@@ -184,7 +184,21 @@ class TaskKeChao(TaskBase):
                 return True
         return False
 
-@Task("自动小游戏", "尚未编写")
+@Task("自动小游戏-千人千面", "需自行修改代码进行配置")
+class TaskQianRenQianMian(TaskBase):
+    """千人千面"""
+
+    def __init__(self):
+        super().__init__()
+        self.lastTime = 0
+        return
+
+    def begin(self, player, t):
+        """开始小游戏"""
+        
+        return Results.FAIL
+
+@Task("自动小游戏", "更多自动小游戏敬请期待...")
 class TaskMiniGames(TaskBase):
     """活动小游戏 算了放弃了 毁灭吧赶紧的"""
 

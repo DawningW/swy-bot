@@ -2,22 +2,26 @@
 
 import sys
 import cv2
+if sys.platform.startswith("win32") or sys.platform.startswith("cygwin"):
+    from platforms.windows import *
+else:
+    from platforms.linux import *
 
-def timeToSecond(time: str) -> int:
+def timetosecond(time: str) -> int:
     strs = time.split(':')
     second = int(strs[-1])
     minute = int(strs[-2]) if len(strs) > 1 else 0
     hour = int(strs[-3]) if len(strs) > 2 else 0
     return second + minute * 60 + hour * 3600
 
-def secondToTime(second: int) -> str:
+def secondtotime(second: int) -> str:
     minute = int(second / 60)
     second %= 60
     hour = int(minute / 60)
     minute %= 60
     return "%02d:%02d:%02d" % (hour, minute, second)
 
-def isPacked():
+def ispacked():
     return hasattr(sys, 'frozen')
 
 def readimage(name):

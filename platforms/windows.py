@@ -1,12 +1,44 @@
 # coding=utf-8
 
+import os
+import ctypes
 import win32api, win32gui, win32ui, win32con
+
+def openurl(url):
+    "打开文件/文件夹/链接"
+    os.system("start " + url)
+    return
+
+def isadmin():
+    "检查管理员权限"
+    return True # TODO Windows下似乎不需要管理员权限
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+def runasadmin(executable, argument = ""):
+    "以管理员身份运行"
+    ctypes.windll.shell32.ShellExecuteW(None, "runas", executable, argument, None, 1)
+    return
+
+def settitle(title):
+    "设置控制台窗口标题"
+    ctypes.windll.kernel32.SetConsoleTitleW(title)
+    return
 
 def getdpi(hWnd):
     hDC = win32gui.GetDC(hWnd)
     dpi = (win32ui.GetDeviceCaps(hDC, win32con.LOGPIXELSX), win32ui.GetDeviceCaps(hDC, win32con.LOGPIXELSY))
-    win32gui.ReleaseDC(self.window, hDC)
+    win32gui.ReleaseDC(hWnd, hDC)
     return dpi
+
+def setnodpi():
+    try: # >= windows 8.1
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
+    except: # <= windows 8.0
+        ctypes.windll.user32.SetProcessDPIAware()
+    return
 
 def toscreenpos(hWnd, x, y):
     return win32gui.ClientToScreen(hWnd, (x, y))
@@ -16,17 +48,6 @@ def getcursorpos():
 
 def setcursorpos(x, y):
     return win32api.SetCursorPos((x, y))
-
-CursorPos = None
-
-def storecursorpos():
-    global CursorPos
-    CursorPos = getcursorpos()
-    return
-
-def restorecursorpos():
-    setcursorpos(CursorPos[0], CursorPos[1])
-    return
 
 def findwindow(parent, classname, windowname):
     hWnd = 0
@@ -70,8 +91,19 @@ def screenshot(hWnd):
     # 获取位图信息
     return bitmap.GetBitmapBits(True)
 
-def click(hWnd, x, y, activate = False):
-    storecursorpos()
+_cursorpos = None
+
+def _storecursorpos():
+    global _cursorpos
+    _cursorpos = getcursorpos()
+    return
+
+def _restorecursorpos():
+    setcursorpos(_cursorpos[0], _cursorpos[1])
+    return
+
+def click(hWnd, x, y, activate = True):
+    _storecursorpos()
     scrpos = toscreenpos(hWnd, x, y)
     setcursorpos(scrpos[0], scrpos[1])
     pos = win32api.MAKELONG(x, y)
@@ -80,5 +112,5 @@ def click(hWnd, x, y, activate = False):
     win32api.SendMessage(hWnd, win32con.WM_MOUSEACTIVATE, hWnd, win32api.MAKELONG(win32con.HTCLIENT, win32con.WM_LBUTTONDOWN))
     win32api.SendMessage(hWnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, pos)
     win32api.SendMessage(hWnd, win32con.WM_LBUTTONUP, 0, pos)
-    restorecursorpos()
+    _restorecursorpos()
     return

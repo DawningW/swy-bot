@@ -5,7 +5,7 @@ import math
 import time
 import pulp
 import swy
-from utils import timeToSecond, secondToTime
+from utils import timetosecond, secondtotime
 
 class Goals(Enum):
     """
@@ -131,7 +131,7 @@ def run():
         return
     print("结果为(按照输入的顺序):")
     for index, item in enumerate(result):
-        cooktime = secondToTime(item["time"])
+        cooktime = secondtotime(item["time"])
         money = item["food"].price * item["count"]
         print("%d. %sX%d 耗时: %s 盈利: %d贝币" % (index + 1, item["food"].name, item["count"], cooktime, money))
     print("总利润: %d贝币" % totalmoney)
