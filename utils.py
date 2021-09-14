@@ -22,7 +22,7 @@ def secondtotime(second: int) -> str:
     return "%02d:%02d:%02d" % (hour, minute, second)
 
 def ispacked():
-    return hasattr(sys, 'frozen')
+    return hasattr(sys, "frozen")
 
 def readimage(name):
     return cv2.imread("./data/" + name + ".png", cv2.IMREAD_UNCHANGED)
