@@ -7,6 +7,7 @@ import math
 import numpy
 import cv2
 from utils import readimage, writeimage
+import matching
 
 class Phases(IntEnum):
     """任务执行的阶段"""
@@ -160,7 +161,7 @@ class TaskKeChao(TaskBase):
         return Results.PASS
 
     def end(self, player, t):
-        """结束客潮"""
+        """客潮结束"""
         self.image = player.screenshot()
         if self.step == 3:
             if t - self.lastTime > 2:
@@ -184,19 +185,120 @@ class TaskKeChao(TaskBase):
                 return True
         return False
 
+# 消除的时间间隔
+TIME_INTERVAL = 0.5
+# 游戏区域距离屏幕左方的距离
+MARGIN_LEFT = 100
+# 游戏区域距离屏幕顶部的距离
+MARGIN_TOP = 100
+# 横向方块数量
+H_NUM = 11
+# 纵向方块数量
+V_NUM = 6
+# 方块宽度
+SQUARE_WIDTH = 65
+# 方块高度
+SQUARE_HEIGHT = 65
+# 切片处理时的左上和右下坐标
+SUB_LT_X = 5
+SUB_LT_Y = 5
+SUB_RB_X = 26
+SUB_RB_Y = 30
+
 @Task("自动小游戏-千人千面", "需自行修改代码进行配置")
 class TaskQianRenQianMian(TaskBase):
-    """千人千面"""
+    """千人千面自动连连看"""
 
     def __init__(self):
         super().__init__()
+        return
+
+    def init(self):
+        super().init()
         self.lastTime = 0
+        self.result = None
+        self.pair = None
         return
 
     def begin(self, player, t):
-        """开始小游戏"""
-        
-        return Results.FAIL
+        """需要玩家位于小游戏界面"""
+
+        return Results.PASS
+
+    def run(self, player, t):
+        """小游戏挂机中"""
+        self.image = player.screenshot()
+        if self.result is None:
+            # 图像切片并保存在数组中
+            squares = []
+            for i in range(0, H_NUM):
+                for j in range(0, V_NUM):
+                    x = MARGIN_LEFT + i * SQUARE_WIDTH
+                    y = MARGIN_TOP + j * SQUARE_HEIGHT
+                    square = self.image[y : y + SQUARE_HEIGHT, x : x + SQUARE_WIDTH]
+                    squares.append(square)
+            # 因为有些图片的边缘不一致会造成干扰(主要是空白区域)
+            # 所以把每个方块向内缩小一部分屏蔽掉外边缘
+            squares = [square[SUB_LT_Y : SUB_RB_Y, SUB_LT_X : SUB_RB_X] for square in squares]
+            # 相同的方块作为一种类型放在数组中
+            def isImageExist(img, img_list):
+                for existed_img in img_list:
+                    b = np.subtract(existed_img, img) # 图片数组进行比较, 返回的是两个图片像素点差值的数组
+                    if not np.any(b): # 如果全部是0, 说明两图片完全相同
+                        return True
+                return False
+            types = []
+            for square in squares:
+                if not isImageExist(square, types):
+                    types.append(square)
+            # 将切片处理后的图片数组转换成相对应的数字矩阵
+            record = [] # 整个记录的二维数组
+            line = [] # 记录一行
+            for square in all_square_list: # 把所有的方块和保存起来的所有类型做对比
+                num = 0
+                for type in types: # 所有类型
+                    res = cv2.subtract(square,type) # 作比较
+                    if not np.any(res):  # 如果两个图片一样
+                        line.append(num) # 将类型的数字记录进这一行
+                        break            # 并且跳出循环
+                    num += 1             # 如果没有匹配上, 则类型数加1
+                if len(line) == V_NUM:   # 如果校验完这一行已经有了11个数据, 则另起一行
+                    record.append(line)
+                    line = []
+            self.result = np.transpose(record)
+        # 执行自动消除
+        if t - self.lastTime >= TIME_INTERVAL:
+            # 第二次选择
+            if self.pair is not None:
+                player.click(self.pair[0] + 15, self.pair[1] + 18)
+                self.pair = None
+                return Results.PASS
+            # 定位第一个选中点
+            for i in range(len(self.result)):
+                for j in range(len(self.result[0])):
+                    if self.result[i][j] != 0:
+                        # 定位第二个选中点
+                        for m in range(len(self.result)):
+                            for n in range(len(self.result[0])):
+                                if self.result[m][n] != 0:
+                                    if matching.canConnect(i, j, m, n, self.result):
+                                    # 执行消除算法并返回
+                                        self.result[i][j] = 0
+                                        self.result[m][n] = 0
+                                        x1 = MARGIN_LEFT + j * SQUARE_WIDTH
+                                        y1 = MARGIN_TOP + i * SQUARE_HEIGHT
+                                        x2 = MARGIN_LEFT + n * SQUARE_WIDTH
+                                        y2 = MARGIN_TOP + m * SQUARE_HEIGHT
+                                        player.click(x1 + 15, y1 + 18)
+                                        self.pair = (x2, y2)
+                                        return Results.PASS
+        # TODO 判断一下出现结束画面才算完毕, 否则等待一会后重新规划
+        print("自动消除运行完毕")
+        return Results.SUCCESS
+
+    def end(self, player, t):
+        """小游戏结束"""
+        return Results.SUCCESS
 
 @Task("自动小游戏", "更多自动小游戏敬请期待...")
 class TaskMiniGames(TaskBase):

@@ -30,12 +30,14 @@ def settitle(title):
     return
 
 def getdpi(hWnd):
+    "获取屏幕DPI"
     hDC = win32gui.GetDC(hWnd)
     dpi = (win32ui.GetDeviceCaps(hDC, win32con.LOGPIXELSX), win32ui.GetDeviceCaps(hDC, win32con.LOGPIXELSY))
     win32gui.ReleaseDC(hWnd, hDC)
     return dpi
 
 def setnodpi():
+    "禁用DPI"
     try: # >= windows 8.1
         ctypes.windll.shcore.SetProcessDpiAwareness(2)
     except: # <= windows 8.0
@@ -69,6 +71,7 @@ _WINDOWS_LIST = [
 ]
 
 def selectwindow():
+    "选择要挂机的窗口"
     print("注意: 挂机时窗口可以被遮挡, 但不能最小化!!!")
     window = 0
     child = 0
@@ -122,10 +125,12 @@ def _onclicked(event, x, y, flags, param):
     return
 
 def getsize(hWnd):
+    "获取窗口尺寸"
     left, top, right, bottom = win32gui.GetClientRect(hWnd)
     return (right - left, bottom - top)
 
 def screenshot(hWnd):
+    "截图"
     width, height = getsize(hWnd)
     # 返回句柄窗口的设备环境，仅包括客户区
     hDC = win32gui.GetDC(hWnd)
@@ -171,6 +176,7 @@ def _restorecursorpos():
     return
 
 def click(hWnd, x, y, activate = True):
+    "模拟鼠标点击"
     _storecursorpos()
     scrpos = _toscreenpos(hWnd, x, y)
     _setcursorpos(scrpos[0], scrpos[1])
