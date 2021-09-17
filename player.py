@@ -199,21 +199,22 @@ class PlayerScrcpy(PlayerBase):
 class PlayerTest(PlayerBase):
     """图像识别测试"""
     path = None
+    image = None
 
     def init(self):
         super().init()
         self.path = input("请输入要测试的数据集路径: ")
         if self.path == "": self.path = "test"
         print("已成功读取数据集 {}".format(self.path))
-        self.height, self.width = self.screenshot().shape[:2]
+        self.image = utils.readimage(self.path)
+        self.height, self.width = self.image.shape[:2]
         print("已获得截图尺寸: {} X {}".format(self.width, self.height))
         self.calcFactor()
         print("已计算缩放因子: {}".format(self.factor))
         return True
 
     def screenshotraw(self):
-        image = utils.readimage(self.path)
-        return image
+        return numpy.copy(self.image)
 
     def clickraw(self, x, y):
         x, y = int(x), int(y)
