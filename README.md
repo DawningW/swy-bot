@@ -30,7 +30,7 @@
 - PuLP
 - pyinstaller(如需要打包)
 
-详见requirements.txt(已过时, 尚未更新)
+详见requirements.txt
 
 ---
 ## 菜谱&改良
