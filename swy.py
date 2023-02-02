@@ -1,6 +1,6 @@
-# coding=utf-8
-
 from enum import Enum, IntEnum, auto
+from dataclasses import dataclass
+from typing import List
 from utils import timetosecond, secondtotime
 
 class Rarities(Enum):
@@ -21,22 +21,23 @@ class Ingredients(IntEnum):
     FISH = auto()
     SHRIMP = auto()
 
+@dataclass
 class Food:
-    def __init__(self, name, rarity, price, time, consumptions):
-        self.name = name
-        self.rarity = rarity
-        self.price = price
-        self.time = time
-        self.consumptions = consumptions
-        return
+    """菜肴数据类"""
+    name: str
+    rarity: Rarities
+    price: int
+    time: int
+    consumptions: List[int]
 
-    def getConsumption(self, ingredient: Ingredients) -> int:
+    def consumption(self, ingredient: Ingredients) -> int:
         """获取该菜肴所需的某种食材的数量"""
         return self.consumptions[ingredient]
 
 foods = None
 
-def readFoods() -> list:
+def readfoods() -> List[Food]:
+    """读取菜肴数据"""
     global foods
     if foods is None:
         foods = list()
@@ -47,13 +48,13 @@ def readFoods() -> list:
                 rarity = Rarities(values[1])
                 price = int(values[2])
                 time = timetosecond(values[3])
-                consumptions = [int(values[i + 4]) for i in range(len(Ingredients))]
+                consumptions = [int(values[4 + i]) for i in range(len(Ingredients))]
                 foods.append(Food(name, rarity, price, time, consumptions))
     return foods
 
 # 测试
 if __name__ == "__main__":
-    print("读取菜单")
-    readFoods()
-    for food in foods:
-        print("%s(%s)   \t售价: %d  \t烹饪时间: %s(%d秒)  \t消耗食材: %s" % (food.name, food.rarity.value, food.price, secondtotime(food.time), food.time, str(food.consumptions)))
+    print("加载菜肴数据")
+    for food in readfoods():
+        print("%s(%s)   \t售价: %d  \t烹饪时间: %s(%d秒)  \t消耗食材: %s" %
+             (food.name, food.rarity.value, food.price, secondtotime(food.time), food.time, str(food.consumptions)))

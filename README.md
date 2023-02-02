@@ -2,9 +2,11 @@
 # 食物语自动挂机脚本
 
 ## 简介
-食物语自动挂机脚本, 主要用于客潮~~和活动小游戏~~(太难做砍掉了绝对不是因为我懒啊啊啊啊啊啊)
+食物语自动挂机脚本, 主要用于客潮和活动小游戏(目前仅包括千人千面自动消除)
 
-现已加入千人千面自动挂机, 但由于某些原因仅提供算法, 不提供配置, 请在task.py中自行修改配置
+由于某些原因小游戏自动挂机仅提供算法, 不提供配置, 请在tasks/minigame.py中自行修改配置
+
+目前已支持Android系统原生运行脚本, 但有一些性能问题, 详情请见android分支, 若想体验可到releases中下载
 
 现已加入食物语线性规划做菜计算器, 但处于早期测试阶段, 如遇bug请提交issue
 
@@ -17,24 +19,31 @@
 ## 食用方式
 详见程序内指引
 
-**注意:** 若使用ADB(Scrcpy模式), 请确保系统环境变量中有ADB, 并且ADB已连接至手机
+**注意:** 若使用ADB和Scrcpy模式, 请确保系统环境变量中有ADB, 并且ADB已连接至手机
 
 ---
 ## 食材
-- Python3
+必需依赖:
+- Python 3.8+
+- numpy
 - opencv-python
-- PyAV
-- pywin32(仅Windows上需要)
-- PyAutoGUI(仅Windows以外的系统需要)
-- pure-python-adb
-- PuLP
-- pyinstaller(如需要打包)
 
-详见requirements.txt
+平台特定(现已引入动态加载模式, 未安装库仅会禁用对应模式, 脚本仍可正常运行):
+- Windows原生模式:
+    - pywin32
+- linux和mac原生模式:
+    - PyAutoGUI
+- 任意系统ADB模式:
+    - pure-python-adb
+- 任意系统Scrcpy模式:
+    - av
+
+线性规划做菜计算器:
+- PuLP
 
 ---
 ## 菜谱&改良
-本项目可在Windows, Linux和MacOS上运行, 但目前仅在Windows上测试过
+本项目可在Windows, Linux，MacOS和Android系统上运行, Android系统需要专用的用于加载脚本的APP才能运行, 详见android分支
 
 另外本挂机脚本实际上提供了一个框架, 经过简单修改应该也能用于其他游戏, 甚至是用于训练人工智能玩游戏(逃
 
@@ -44,19 +53,32 @@
 - libs/ 脚本所需的库, 目前只有Scrcpy的服务端
 - data/ 存储游戏数据和挂机所需资源的目录
 - saved/ 截图会保存在这个目录
-- main.py 主文件
-- player.py 负责与游戏交互(通过原生窗口/ADB/Scrcpy)
-- task.py 执行挂机任务
+- algorithms/ 算法
+    - detect.py 图像识别相关算法
+    - matching.py 自动连连看算法(原作者TheThreeDog)
+- players/ 模式
+    - player.py 模式基类
+    - native.py 通过原生窗口与游戏交互
+    - adb.py 通过ADB与游戏交互
+    - scrcpy.py 通过Scrcpy与游戏交互
+    - debug.py 调试用
+- tasks/ 挂机任务
+    - task.py 挂机任务基类
+    - kechao.py 客潮挂机任务
+    - minigame.py 小游戏挂机任务
 - platforms/ 工具模块的平台相关实现
+    - console.py 具有命令行的系统上的实现
     - windows.py Windows系统相关实现
     - linux.py Linux系统相关实现
+    - android.py Android系统相关实现
+- main.py 主模块
+- profit.py 线性规划做菜计算器(可单独运行)
+- swy.py 食物语游戏数据(单独运行为输出游戏数据)
+- scrcpy.py Python实现的Scrcpy客户端
 - utils.py 工具模块
-- swy.py 负责加载游戏数据
-- profit.py 线性规划做菜计算器
-- matching.py 自动连连看算法(原作者TheThreeDog)
 
 ### 自动挂机
-详见player.py和task.py
+详见players和tasks目录
 
 ### 线性规划做菜计算器
 线性规划算法详见profit.py中的注释
@@ -68,7 +90,7 @@
 
 另外烹饪时间出现小数的话只有入没有舍, 是ceil
 
-### 自动连连看
+### 自动小游戏
 由于某些原因, 本项目仅提供用于学习的算法, 不包含配置, 如需使用请自行配置
 
 ---
@@ -76,7 +98,7 @@
 1. 拿走菜谱(克隆仓库到本地)
 1. 准备好食材(安装第三方库)
 1. 开始做菜(运行main.py)
-1. 装盘(如需构建, 请使用pyinstaller)
+1. 装盘(目前仍无法打包运行, 请考虑使用Android原生版本)
 1. 随心所欲地修改菜谱(请随意修改代码)
 
 ---
@@ -96,6 +118,7 @@
 2021/9/13 加入自动连连看算法, 初步支持Linux
 2021/9/14 已加入对Linux和MacOS的支持, 但尚未测试, 更新版本号至V1.6
 2021/9/17 已加入千人千面自动挂机功能, 更新版本号至V1.7
+2023/2/2 代码重写, 用协程替代状态机, 实现动态加载模式, 移植到Android系统, 由于更新内容较多, 更新版本号为V2.0
 </pre>
 </details>
 

@@ -1,5 +1,3 @@
-# coding=utf-8
-
 import time
 import subprocess
 import socket
@@ -49,7 +47,6 @@ class ScrcpyClient(object):
         self.ip = ip
         self.port = port
         self.video_data_queue = Queue(queue_length)
-        return
 
     def connect_and_forward_scrcpy(self):
         try:
@@ -96,7 +93,6 @@ class ScrcpyClient(object):
             time.sleep(1)
         except FileNotFoundError:
             raise FileNotFoundError("Could not find ADB at path: " + self.adb_path)
-        return
 
     def disable_forward(self):
         subprocess.call([self.adb_path, 'forward', '--remove', 'tcp:%d' % self.port])
@@ -125,7 +121,6 @@ class ScrcpyClient(object):
         print("Screen resolution: %dX%d" % (self.resolution[0], self.resolution[1]))
 
         self.video_socket.setblocking(False)
-        return
 
     def start(self):
         if self.is_running: return False
@@ -138,7 +133,7 @@ class ScrcpyClient(object):
             if self.decode_thread is None:
                 self.decode_thread = Thread(target=self.loop, daemon=True)
                 self.decode_thread.start()
-        except:
+        except Exception:
             self.stop()
             raise
             return False
@@ -165,7 +160,6 @@ class ScrcpyClient(object):
                     if self.video_data_queue.full():
                         self.video_data_queue.get()
                     self.video_data_queue.put(frame.to_ndarray(format="bgr24"))
-        return
 
     def get_next_frame(self, latest_image=False):
         if self.video_data_queue and not self.video_data_queue.empty():
@@ -239,4 +233,3 @@ class ScrcpyClient(object):
             self.control_socket.close()
             self.control_socket = None
         self.disable_forward()
-        return

@@ -1,5 +1,3 @@
-# coding=utf-8
-
 from enum import Enum, auto
 import math
 import time
@@ -10,16 +8,15 @@ from utils import timetosecond, secondtotime
 class Goals(Enum):
     """
     指定线性规划的目标函数
-
-    MAX_MONEY 总利润最大
-    MAX_TIME 总烹饪时间最长
-    MAX_CONSUMPTION 消耗的食材最多
-    ALL 小孩纸才做选择, 大人全都要
     """
     MAX_MONEY = 1
-    MAX_TIME = auto() 
+    """总利润最大"""
+    MAX_TIME = auto()
+    """总烹饪时间最长"""
     MAX_CONSUMPTION = auto()
+    """消耗的食材最多"""
     ALL = auto()
+    """小孩纸才做选择, 大人全都要"""
 
 def calculate(foods, materials, cooks, goal=Goals.MAX_MONEY):
     MIN_PRODUCTION = 0 # 菜肴最小烹饪量
@@ -35,7 +32,7 @@ def calculate(foods, materials, cooks, goal=Goals.MAX_MONEY):
     constraints = []
     # 每种食材消耗量不超过总量 V(x, y, z, ...) <= V总, M(x, y, z, ...) <= M总, ...
     for ingredient in swy.Ingredients:
-        consumption = pulp.lpSum([foods[i].getConsumption(ingredient) * variables[i] for i in range(VAR_NUM)])
+        consumption = pulp.lpSum([foods[i].consumption(ingredient) * variables[i] for i in range(VAR_NUM)])
         consumptions.append(consumption)
         constraints.append(consumption <= materials[ingredient])
     # 确保菜肴的烹饪状态为1时烹饪数量才大于0 0 * x' <= x <= 30 * x'
@@ -52,8 +49,8 @@ def calculate(foods, materials, cooks, goal=Goals.MAX_MONEY):
     # 总消耗食材h(x, y, z, ...)=各菜肴烹饪数量乘以消耗食材量的总和
     obj_consumption = pulp.lpSum(consumptions)
     # 加权 TODO 尝试其他将多目标线性规划转为单目标的方法?
-    objective = obj_money / 15_0000 + obj_consumption / sum(materials)
-    
+    obj_all = obj_money / 15_0000 + obj_consumption / sum(materials)
+
     problem = pulp.LpProblem("swy_problem", pulp.LpMaximize)
     problem.addVariables(variables)
     problem.addVariables(cook_status)
@@ -66,7 +63,7 @@ def calculate(foods, materials, cooks, goal=Goals.MAX_MONEY):
     elif goal == Goals.MAX_CONSUMPTION:
         problem.setObjective(obj_consumption)
     elif goal == Goals.ALL:
-        problem.setObjective(objective)
+        problem.setObjective(obj_all)
         print("目前混合模式采用加权把多目标转化为单目标函数, 效果不好")
     problem.solve()
     # pulp.LpStatus[problem.status]
@@ -96,15 +93,15 @@ def run():
     # pulp.LpSolverDefault = pulp.COIN_CMD(path="./libs/cbc.exe")
     print("欢迎使用食物语线性规划做菜计算器")
     print("原作者ic30rs, 现由WC维护")
-    foods = swy.readFoods()
+    foods = swy.readfoods()
     materials = []
     cooks = []
     print("请输入想要烹饪的菜肴的品质, 用空格分割, 不输入则默认使用全部菜肴")
     str = input("")
     if str != "":
         strs = str.split(' ')
-        dishtypes = set([swy.Rarities(r) for r in strs])
-        foods = [food for food in foods if food.rarity in dishtypes]
+        dish_types = set([swy.Rarities(r) for r in strs])
+        foods = [food for food in foods if food.rarity in dish_types]
     print("请输入食材数量, 格式为: 菜 肉 谷 蛋 鱼 虾")
     str = input("")
     strs = str.split(' ')
@@ -124,19 +121,18 @@ def run():
     type = Goals(int(str))
     print("正在计算中, 请稍候...")
     t = time.time()
-    result, totalmoney, restmaterials = calculate(foods, materials, cooks, type)
+    result, total_money, rest_materials = calculate(foods, materials, cooks, type)
     print("计算完成, 耗时 %f 秒" % (time.time() - t))
     if result is None:
         print("很抱歉, 该问题无解或有无穷多个最优解")
         return
     print("结果为(按照输入的顺序):")
     for index, item in enumerate(result):
-        cooktime = secondtotime(item["time"])
+        cook_time = secondtotime(item["time"])
         money = item["food"].price * item["count"]
-        print("%d. %sX%d 耗时: %s 盈利: %d贝币" % (index + 1, item["food"].name, item["count"], cooktime, money))
-    print("总利润: %d贝币" % totalmoney)
-    print("剩余食材: 菜%d 肉%d 谷%d 蛋%d 鱼%d 虾%d" % tuple(restmaterials))
-    return
+        print("%d. %sX%d 耗时: %s 盈利: %d贝币" % (index + 1, item["food"].name, item["count"], cook_time, money))
+    print("总利润: %d贝币" % (total_money))
+    print("剩余食材: 菜%d 肉%d 谷%d 蛋%d 鱼%d 虾%d" % tuple(rest_materials))
 
 # 测试
 if __name__ == "__main__":

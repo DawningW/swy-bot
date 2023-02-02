@@ -24,43 +24,37 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="matching.py" />
-    <Compile Include="platforms\linux.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="profit.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="scrcpy.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="swy.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="utils.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="main.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="player.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="task.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="platforms\windows.py">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="algorithms\detect.py" />
+    <Compile Include="algorithms\matching.py" />
+    <Compile Include="platforms\console.py" />
+    <Compile Include="players\adb.py" />
+    <Compile Include="players\native.py" />
+    <Compile Include="players\scrcpy.py" />
+    <Compile Include="players\debug.py" />
+    <Compile Include="players\__init__.py" />
+    <Compile Include="tasks\kechao.py" />
+    <Compile Include="tasks\minigame.py" />
+    <Compile Include="tasks\__init__.py" />
+    <Compile Include="utils.py" />
+    <Compile Include="platforms\android.py" />
+    <Compile Include="platforms\linux.py" />
+    <Compile Include="platforms\__init__.py" />
+    <Compile Include="profit.py" />
+    <Compile Include="scrcpy.py" />
+    <Compile Include="swy.py" />
+    <Compile Include="main.py" />
+    <Compile Include="players\player.py" />
+    <Compile Include="tasks\task.py" />
+    <Compile Include="platforms\windows.py" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="platforms\" />
+    <Folder Include="algorithms" />
+    <Folder Include="platforms" />
+    <Folder Include="players" />
+    <Folder Include="tasks" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|PythonCore|3.9" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="requirements.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

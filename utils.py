@@ -1,14 +1,22 @@
-# coding=utf-8
-
 import sys
-import cv2
-if sys.platform.startswith("win32") or sys.platform.startswith("cygwin"):
-    from platforms.windows import *
-else:
-    from platforms.linux import *
+import time
+from platforms import *
 
-def timetosecond(time: str) -> int:
-    strs = time.split(':')
+class Timer(object):
+    """定时器类"""
+    end_time: float
+
+    def __init__(self, interval: float):
+        self.end_time = time.perf_counter() + interval
+
+    def timeout(self) -> bool:
+        return time.perf_counter() >= self.end_time
+
+def throw(msg: str):
+    raise Exception(msg)
+
+def timetosecond(time_str: str) -> int:
+    strs = time_str.split(':')
     second = int(strs[-1])
     minute = int(strs[-2]) if len(strs) > 1 else 0
     hour = int(strs[-3]) if len(strs) > 2 else 0
@@ -21,12 +29,5 @@ def secondtotime(second: int) -> str:
     minute %= 60
     return "%02d:%02d:%02d" % (hour, minute, second)
 
-def ispacked():
+def ispacked() -> bool:
     return hasattr(sys, "frozen")
-
-def readimage(name):
-    return cv2.imread("./data/" + name + ".png", cv2.IMREAD_UNCHANGED)
-
-def writeimage(name, image):
-    cv2.imwrite("./saved/" + name + ".png", image, [int(cv2.IMWRITE_PNG_COMPRESSION), 3])
-    return
