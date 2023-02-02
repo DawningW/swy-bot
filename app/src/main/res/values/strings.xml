@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Swy Bot</string>
+    <string name="accessibility_desc">食物语自动挂机脚本</string>
+    <string name="exit_message">未找到食物语, 应用即将退出</string>
+    <string name="permission_window">请授予脚本显示悬浮窗的权限</string>
+    <string name="permission_accessibility">请授予脚本无障碍服务权限</string>
+    <string name="permission_ok">权限检查已通过, 欢迎回到空桑~</string>
+    <string name="back">返回</string>
+
+</resources>

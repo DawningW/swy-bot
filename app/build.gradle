@@ -1,0 +1,56 @@
+plugins {
+    id 'com.android.application'
+    id 'com.chaquo.python'
+}
+
+android {
+    namespace 'kongsang.swybot'
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "kongsang.swybot"
+        minSdk 24
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+        python {
+            version "3.8"
+            pip {
+//                options "--index-url", "https://pypi.tuna.tsinghua.edu.cn/simple/"
+//                options "--extra-index-url", "http://pypi.mirrors.ustc.edu.cn/simple/"
+                install "../packages/chaquopy_libcxx-11000-0-py3-none-android_21_arm64_v8a.whl"
+                install "../packages/chaquopy_libgfortran-4.9-0-py3-none-android_21_arm64_v8a.whl"
+                install "../packages/chaquopy_libjpeg-1.5.3-1-py3-none-android_21_arm64_v8a.whl"
+                install "../packages/chaquopy_libpng-1.6.34-1-py3-none-android_21_arm64_v8a.whl"
+                install "../packages/chaquopy_openblas-0.2.20-5-py3-none-android_21_arm64_v8a.whl"
+                install "../packages/numpy-1.19.5-0-cp38-cp38-android_21_arm64_v8a.whl"
+                install "../packages/opencv_python-4.5.1.48-1-cp38-cp38-android_21_arm64_v8a.whl"
+//                install "pulp" // 目前还没有arm64版本的
+            }
+        }
+        ndk {
+            abiFilters /* "armeabi-v7a", */ "arm64-v8a" /* , "x86", "x86_64" */
+        }
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.0'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}
