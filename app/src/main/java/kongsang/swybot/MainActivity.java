@@ -19,8 +19,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
     public static final String CHANNEL_ID = "SWY_BOT";
+    public static final String SWY_PACKAGE_NAME = "com.tencent.swy";
     private static final String TAG = "MainActivity";
-    private static final String SWY_PACKAGE_NAME = "com.tencent.swy";
 
     private ActivityResultLauncher<Intent> activityResultLauncher;
 
@@ -77,11 +77,10 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         SystemUtil.toast(this, R.string.permission_ok);
-        startSwyBot();
+        startGame();
     }
 
-    private void startSwyBot() {
-        startService(new Intent(this, SwyBotService.class));
+    private void startGame() {
         startActivity(getPackageManager().getLaunchIntentForPackage(SWY_PACKAGE_NAME));
         finish();
     }

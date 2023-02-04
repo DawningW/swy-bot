@@ -1,6 +1,7 @@
 package kongsang.swybot;
 
 import android.accessibilityservice.AccessibilityService;
+import android.accessibilityservice.AccessibilityServiceInfo;
 import android.accessibilityservice.GestureDescription;
 import android.app.AlertDialog;
 import android.app.Service;
@@ -30,12 +31,11 @@ import com.chaquo.python.PyException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-// TODO 悬浮窗相关的记笔记
 public class SwyBotService extends AccessibilityService {
     public static final int NOTIFICATION_ID = 233;
     private static final String TAG = "SwyBotService";
-    private WindowManager windowManager;
 
+    private WindowManager windowManager;
     private SharedPreferences preferences;
     private Handler handler;
     private FloatingButtonWindow floatingButton;
@@ -53,7 +53,7 @@ public class SwyBotService extends AccessibilityService {
 
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         preferences = getSharedPreferences("preferences", Context.MODE_PRIVATE);
-        handler = new Handler();
+        handler = new Handler(getMainLooper());
 
         floatingButton = new FloatingButtonWindow(this);
         floatingButton.setOnClickListener(v -> {
@@ -69,6 +69,9 @@ public class SwyBotService extends AccessibilityService {
     @Override
     protected void onServiceConnected() {
         Log.i(TAG, "Accessibility service connected");
+        AccessibilityServiceInfo serviceInfo = getServiceInfo();
+        serviceInfo.packageNames = new String[] { MainActivity.SWY_PACKAGE_NAME };
+        setServiceInfo(serviceInfo);
     }
 
     @Override
@@ -83,6 +86,8 @@ public class SwyBotService extends AccessibilityService {
         stopTask();
         ScriptBridge.setService(null);
         floatingButton.hide();
+        // FIXME 应用强制关闭后无障碍服务无法启动
+        // android.os.Process.killProcess(android.os.Process.myPid());
     }
 
     public int[] getScreenSize() {
@@ -223,7 +228,7 @@ public class SwyBotService extends AccessibilityService {
                 .setTitle(title)
                 .setItems(items.toArray(new String[0]), (dialog, which) -> {
                     if (which == items.size() - 1) {
-                        android.os.Process.killProcess(android.os.Process.myPid());
+                        disableSelf();
                     } else {
                         listener.onClick(dialog, which);
                     }
