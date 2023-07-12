@@ -95,7 +95,10 @@ public class SwyBotService extends AccessibilityService {
         // TODO 如果以后 Android 多窗口流行则需要改为 WindowManager.getCurrentWindowMetrics()
         DisplayMetrics displayMetrics = new DisplayMetrics();
         windowManager.getDefaultDisplay().getRealMetrics(displayMetrics);
-        return new int[] { displayMetrics.widthPixels, displayMetrics.heightPixels };
+        if (displayMetrics.widthPixels > displayMetrics.heightPixels)
+            return new int[] { displayMetrics.widthPixels, displayMetrics.heightPixels };
+        else // TODO Harmony3.0在解开应用锁后swybot仍为竖屏状态, 导致分辨率获取错误
+            return new int[] { displayMetrics.heightPixels, displayMetrics.widthPixels };
     }
 
     public int getScreenDpi() {
