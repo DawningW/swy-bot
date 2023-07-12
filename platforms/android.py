@@ -70,5 +70,9 @@ def readimage(name):
     return cv2.imread(filepath, cv2.IMREAD_UNCHANGED)
 
 def writeimage(name, image):
-    filepath = ScriptBridge.getStoragePath() + "/" + name + ".png"
-    return cv2.imwrite(filepath, image, [int(cv2.IMWRITE_PNG_COMPRESSION), 3])
+    filepath = ScriptBridge.getStoragePath() + "/temp.png"
+    if cv2.imwrite(filepath, image, [int(cv2.IMWRITE_PNG_COMPRESSION), 3]):
+        ret = ScriptBridge.saveToAlbum(filepath, name + ".png")
+        os.remove(filepath)
+        return ret
+    return False

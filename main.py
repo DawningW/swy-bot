@@ -17,7 +17,7 @@ player = None
 def mainmenu():
     utils.settitle("欢迎使用食物语挂机脚本")
     print('''=============================================
-食物语挂机脚本 V2.0 作者: WC
+食物语挂机脚本 V2.1 作者: WC
 本脚本仅供个人代肝使用, 严禁用于商业用途
 使用本脚本造成的一切法律纠纷由使用者自行承担
 项目地址: https://github.com/DawningW/swy-bot
