@@ -21,6 +21,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Surface;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 
@@ -86,8 +87,6 @@ public class SwyBotService extends AccessibilityService {
         stopTask();
         ScriptBridge.setService(null);
         floatingButton.hide();
-        // FIXME 应用强制关闭后无障碍服务无法启动
-        // android.os.Process.killProcess(android.os.Process.myPid());
     }
 
     public int[] getScreenSize() {
@@ -95,10 +94,11 @@ public class SwyBotService extends AccessibilityService {
         // TODO 如果以后 Android 多窗口流行则需要改为 WindowManager.getCurrentWindowMetrics()
         DisplayMetrics displayMetrics = new DisplayMetrics();
         windowManager.getDefaultDisplay().getRealMetrics(displayMetrics);
-        if (displayMetrics.widthPixels > displayMetrics.heightPixels)
-            return new int[] { displayMetrics.widthPixels, displayMetrics.heightPixels };
-        else // TODO Harmony3.0在解开应用锁后swybot仍为竖屏状态, 导致分辨率获取错误
-            return new int[] { displayMetrics.heightPixels, displayMetrics.widthPixels };
+        int width = Math.max(displayMetrics.widthPixels, displayMetrics.heightPixels);
+        int height = Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels);
+        int rotation = windowManager.getDefaultDisplay().getRotation();
+        return rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270 ?
+                new int[] { width, height } : new int[] { height, width };
     }
 
     public int getScreenDpi() {
@@ -232,6 +232,8 @@ public class SwyBotService extends AccessibilityService {
                 .setItems(items.toArray(new String[0]), (dialog, which) -> {
                     if (which == items.size() - 1) {
                         disableSelf();
+                        // HACK 禁用无障碍服务后Application未结束导致空指针异常
+                        android.os.Process.killProcess(android.os.Process.myPid());
                     } else {
                         listener.onClick(dialog, which);
                     }

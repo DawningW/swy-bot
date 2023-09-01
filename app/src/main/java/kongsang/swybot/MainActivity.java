@@ -4,6 +4,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -81,6 +82,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startGame() {
+        // HACK Harmony3.0在解开应用锁后swybot仍为竖屏状态, 导致分辨率获取错误
+        if (SystemUtil.isHarmonyOS() && SystemUtil.getHarmonyVersion() >= 3) {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        }
         startActivity(getPackageManager().getLaunchIntentForPackage(SWY_PACKAGE_NAME));
         finish();
     }

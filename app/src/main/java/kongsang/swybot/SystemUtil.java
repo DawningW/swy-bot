@@ -1,6 +1,7 @@
 package kongsang.swybot;
 
 import android.accessibilityservice.AccessibilityService;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.provider.Settings;
@@ -13,6 +14,7 @@ import androidx.annotation.StringRes;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Method;
 
 public final class SystemUtil {
     private static final String TAG = "SystemUtil";
@@ -65,5 +67,32 @@ public final class SystemUtil {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static boolean isHarmonyOS() {
+        try {
+            Class<?> clz = Class.forName("com.huawei.system.BuildEx");
+            Method method = clz.getMethod("getOsBrand");
+            String ret = (String) method.invoke(clz);
+            return "harmony".equals(ret);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @SuppressLint("PrivateApi")
+    public static int getHarmonyVersion() {
+        try {
+            Class<?> clz = Class.forName("android.os.SystemProperties");
+            Method method = clz.getDeclaredMethod("get", String.class);
+            String ret = (String) method.invoke(clz, "hw_sc.build.platform.version");
+            if (!TextUtils.isEmpty(ret)) {
+                return Integer.parseInt(ret.split("\\.")[0]);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 }
