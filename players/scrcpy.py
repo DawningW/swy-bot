@@ -8,7 +8,9 @@ class ScrcpyPlayer(Player):
     client = None
 
     def __init__(self):
-        self.client = ScrcpyClient(max_fps=30, queue_length=3)
+        self.client = ScrcpyClient(queue_length=3)
+        self.client.set_option("max_fps", 30)
+        self.client.set_option("show_touches", "false")
         self.client.start()
         print(f"已成功连接至设备 {self.client.device_name}")
         self.width, self.height = self.client.resolution
@@ -22,7 +24,7 @@ class ScrcpyPlayer(Player):
         while True:
             image = self.client.get_next_frame(True)
             if image is None:
-                time.sleep(0.01 / self.client.max_fps)
+                time.sleep(0.01)
                 continue
             image = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
             return image
