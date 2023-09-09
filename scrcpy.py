@@ -11,7 +11,8 @@ ACTION_UP = b'\x01'
 ACTION_MOVE = b'\x02'
 
 class ScrcpyClient(object):
-    '''Scrcpy的客户端'''
+    '''Scrcpy client implemented in Python'''
+    
     is_running = False
     device_name = None
     resolution = None
@@ -22,28 +23,31 @@ class ScrcpyClient(object):
     codec = None
     video_data_queue = None
 
-    def __init__(self, bit_rate=8000000, log_level='info', queue_length=5,
-                    libs_path='libs', adb_path='adb', ip='127.0.0.1', port=27199):
+    def __init__(self, log_level='info', queue_length=5,
+                 libs_path='libs', adb_path='adb', ip='127.0.0.1', port=27199):
         '''
-        初始化Scrcpy客户端
-
-        :param bit_rate:
+        :param log_level: log info of scrcpy server
+        :param queue_length: video queue length
         :param libs_path: path to 'scrcpy-server.jar'
         :param adb_path: path to ADB
         :param ip: scrcpy server IP
         :param port: scrcpy server port
         '''
         print('Init Scrcpy client')
-        self.options = {}
-        self.options['log_level'] = log_level
-        self.options['bit_rate'] = bit_rate
-        self.options['tunnel_forward'] = 'true'
         self.libs_path = libs_path
+        # v1
+        # self.lib_name = 'scrcpy-server-1.25.jar'
+        # self.lib_version = '1.25'
+        # v2
         self.lib_name = 'scrcpy-server.jar'
-        self.lib_version = '1.25'
+        self.lib_version = '2.1.1'
         self.adb_path = adb_path
         self.ip = ip
         self.port = port
+        self.is_v2 = int(self.lib_version[0]) >= 2
+        self.options = {}
+        self.options['log_level'] = log_level
+        self.options['tunnel_forward'] = 'true'
         self.video_data_queue = Queue(queue_length)
 
     def set_option(self, key, value):
@@ -55,7 +59,7 @@ class ScrcpyClient(object):
         - max_fps: (integer) max fps
         - lock_video_orientation: (integer) lock video orientation
         - tunnel_forward: (bool) tunnel forward: use 'adb forward' instead of 'adb tunnel'
-        - crop: (string) crop, value is 'width:height:x:y'
+        - crop: (string) crop, format: 'width:height:x:y'
         - control: (bool) control
         - display_id: (integer) display id
         - show_touches: (bool) show touches
@@ -67,13 +71,15 @@ class ScrcpyClient(object):
         - downsize_on_error: (bool) downsize on error
         - cleanup: (bool) cleanup
         - power_on: (bool) power on
-        For more options, also see: https://github.com/Genymobile/scrcpy/blob/master/app/src/server.c#L158
+        - list_encoders: (bool) show encoder list
+        - list_displays: (bool) show display list
+        For more options, also see: https://github.com/Genymobile/scrcpy/blob/master/app/src/server.c#L184
         '''
         self.options[key] = value
 
-    def connect_and_forward_scrcpy(self):
+    def push_and_forward(self):
         try:
-            print('Upload JAR...')
+            print('Upload JAR')
             adb_push = subprocess.Popen(
                 [self.adb_path, 'push', self.lib_name, '/data/local/tmp/'],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=self.libs_path)
@@ -90,7 +96,12 @@ class ScrcpyClient(object):
                 self.lib_version
             ]
             args.append('log_level=' + self.options['log_level'])
-            args.append('bit_rate=' + str(self.options['bit_rate']))
+            if not self.is_v2:
+                args.append('bit_rate=' + str(self.options.get('bit_rate', 8000000)))
+            elif 'bit_rate' in self.options:
+                args.append('video_bit_rate=' + str(self.options['bit_rate']))
+            if self.is_v2:
+                args.append('audio=false') # 暂时不支持音频
             if 'max_size' in self.options:
                 args.append('max_size=' + str(self.options['max_size']))
             if 'max_fps' in self.options:
@@ -110,9 +121,11 @@ class ScrcpyClient(object):
             if 'stay_awake' in self.options:
                 args.append('stay_awake=' + self.options['stay_awake'])
             if 'codec_options' in self.options:
-                args.append('codec_options=' + self.options['codec_options'])
+                key = 'codec_options' if not self.is_v2 else 'video_codec_options'
+                args.append(key + '=' + self.options['codec_options'])
             if 'encoder_name' in self.options:
-                args.append('encoder_name=' + self.options['encoder_name'])
+                key = 'encoder_name' if not self.is_v2 else 'video_encoder'
+                args.append(key + '=' + self.options['encoder_name'])
             if 'power_off_on_close' in self.options:
                 args.append('power_off_on_close=' + self.options['power_off_on_close'])
             if 'clipboard_autosync' in self.options:
@@ -123,6 +136,10 @@ class ScrcpyClient(object):
                 args.append('cleanup=' + self.options['cleanup'])
             if 'power_on' in self.options:
                 args.append('power_on=' + self.options['power_on'])
+            if self.is_v2 and 'list_encoders' in self.options:
+                args.append('list_encoders=' + self.options['list_encoders'])
+            if self.is_v2 and 'list_displays' in self.options:
+                args.append('list_displays=' + self.options['list_displays'])
             # ADB Shell is Blocking, don't wait up for it
             self.adb_sub_process = subprocess.Popen(args, stdin=subprocess.PIPE, cwd=self.libs_path)
             time.sleep(1)
@@ -143,7 +160,7 @@ class ScrcpyClient(object):
 
         dummy_byte = self.video_socket.recv(1, socket.MSG_WAITALL)
         if not len(dummy_byte):
-            raise ConnectionError('Did not receive Dummy Byte!')
+            raise ConnectionError('Did not receive dummy byte!')
         else:
             print('Connected successfully!')
 
@@ -153,10 +170,19 @@ class ScrcpyClient(object):
 
         self.device_name = self.video_socket.recv(64, socket.MSG_WAITALL).decode('utf-8')
         if not len(self.device_name):
-            raise ConnectionError('Did not receive Device Name!')
+            raise ConnectionError('Did not receive device name!')
         print('Device name: ' + self.device_name)
 
-        self.resolution = struct.unpack('>HH', self.video_socket.recv(4, socket.MSG_WAITALL))
+    def init_codec(self):
+        codec_id = 'h264'
+        if self.is_v2:
+            codec_id = self.video_socket.recv(4, socket.MSG_WAITALL).decode('utf-8')
+        self.codec = av.codec.CodecContext.create(codec_id, 'r')
+        print('Video codec: %s' % (codec_id,))
+        if self.is_v2:
+            self.resolution = struct.unpack('>II', self.video_socket.recv(8, socket.MSG_WAITALL))
+        else:
+            self.resolution = struct.unpack('>HH', self.video_socket.recv(4, socket.MSG_WAITALL))
         print('Screen resolution: %dX%d' % (self.resolution[0], self.resolution[1]))
 
     def start(self):
@@ -164,17 +190,33 @@ class ScrcpyClient(object):
         self.is_running = True
         print('Start scrcpy client')
         try:
-            self.connect_and_forward_scrcpy()
-            self.codec = av.codec.CodecContext.create('h264', 'r')
+            self.push_and_forward()
             self.connect()
+            self.init_codec()
             if self.decode_thread is None:
                 self.decode_thread = Thread(target=self.loop, daemon=True)
                 self.decode_thread.start()
         except Exception:
             self.stop()
+            raise
             return False
         return True
 
+    def stop(self):
+        if not self.is_running: return
+        self.is_running = False
+        print('Stop scrcpy client')
+        if self.decode_thread is not None:
+            self.decode_thread.join()
+        self.video_data_queue = None
+        if self.video_socket is not None:
+            self.video_socket.close()
+            self.video_socket = None
+        if self.control_socket is not None:
+            self.control_socket.close()
+            self.control_socket = None
+        self.disable_forward()
+        
     def loop(self):
         '''
         Get raw h264 video data from video socket, parse packets, decode each
@@ -184,7 +226,7 @@ class ScrcpyClient(object):
         while self.is_running:
             packets = []
             try:
-                # A "meta" header includes 8 bytes PTS and 4 bytes packet size
+                # A 'meta' header includes 8 bytes PTS and 4 bytes packet size
                 meta = self.video_socket.recv(12, socket.MSG_WAITALL)
                 if len(meta) < 12: continue
                 pts, size = struct.unpack('>QI', meta)
@@ -220,7 +262,9 @@ class ScrcpyClient(object):
         b += struct.pack('>H', int(self.resolution[0]))
         b += struct.pack('>H', int(self.resolution[1]))
         b += b'\xff\xff' if action == ACTION_DOWN else b'\x00\x00' # pressure
-        b += b'\x00\x00\x00\x01' # AMOTION_EVENT_BUTTON_PRIMARY
+        b += b'\x00\x00\x00\x00'
+        if self.is_v2:
+            b += b'\x00\x00\x00\x00'
         return bytes(b)
 
     def tap(self, x, y):
@@ -259,18 +303,3 @@ class ScrcpyClient(object):
                 self.control_socket.send(self.build_touch_message(next_x, next_y, ACTION_UP))
                 break
             time.sleep(move_steps_delay)
-
-    def stop(self):
-        if not self.is_running: return
-        self.is_running = False
-        print('Stop scrcpy client')
-        if self.decode_thread is not None:
-            self.decode_thread.join()
-        self.video_data_queue = None
-        if self.video_socket is not None:
-            self.video_socket.close()
-            self.video_socket = None
-        if self.control_socket is not None:
-            self.control_socket.close()
-            self.control_socket = None
-        self.disable_forward()
