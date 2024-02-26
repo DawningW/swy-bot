@@ -1,5 +1,5 @@
 # swy-bot
-# 食物语自动挂机脚本
+![swy-bot](https://socialify.git.ci/DawningW/swy-bot/image?description=1&forks=1&issues=1&language=1&logo=https%3A%2F%2Fgithub.com%2FDawningW%2Fswy-bot%2Fblob%2Fandroid%2Fapp%2Fsrc%2Fmain%2Fres%2Fmipmap-xxhdpi%2Fic_launcher.png%3Fraw%3Dtrue&name=1&owner=1&pattern=Floating%20Cogs&pulls=1&stargazers=1&theme=Auto)
 
 ## 简介
 食物语自动挂机脚本, 主要用于客潮和活动小游戏(目前仅包括千人千面自动消除)
