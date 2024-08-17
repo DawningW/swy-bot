@@ -1,9 +1,11 @@
 # swy-bot
 ![swy-bot](https://socialify.git.ci/DawningW/swy-bot/image?description=1&forks=1&issues=1&language=1&logo=https%3A%2F%2Fgithub.com%2FDawningW%2Fswy-bot%2Fblob%2Fandroid%2Fapp%2Fsrc%2Fmain%2Fres%2Fmipmap-xxhdpi%2Fic_launcher.png%3Fraw%3Dtrue&name=1&owner=1&pattern=Floating%20Cogs&pulls=1&stargazers=1&theme=Auto)
 
-**由于食物语已于2024年6月18日停止运营, 本项目即日起进行归档, 停止维护, 少主们有缘再会! 如有需要, 本项目中包含的scrcpy客户端将移至独立仓库进行更新**
+~~由于食物语已于2024年6月18日停止运营, 本项目即日起进行归档, 停止维护, 少主们有缘再会! 如有需要, 本项目中包含的scrcpy客户端将移至独立仓库进行更新~~
 
-> 祝百田垃圾公司早日倒闭
+**食物语·陪伴版已于2024年8月16日上线, 承诺永不关服, 因此本项目恢复维护, 但将进入长期支持状态, 仅修复bug, 随缘添加新功能**
+
+> 百田和swy同寿
 
 ## 简介
 食物语自动挂机脚本, 主要用于客潮和活动小游戏(目前仅包括千人千面自动消除)
@@ -13,8 +15,6 @@
 目前已支持Android系统原生运行脚本, 但有一些性能问题, 详情请见android分支, 若想体验可到releases中下载
 
 现已加入食物语线性规划做菜计算器, 但处于早期测试阶段, 如遇bug请提交issue
-
-<!-- **百田和swy同寿** -->
 
 ---
 ## 食用方式
@@ -124,6 +124,7 @@
 2023/9/8 更新Scrcpy至1.25, 修复Android版挂机脚本在鸿蒙系统上的一些问题, 更新版本号为V2.2
 2023/9/9 适配Scrcpy 2.1.1, 更新版本号为V2.3
 2024/6/20 项目归档, 感谢大家的支持
+2024/8/17 复活吧我的爱人!
 </pre>
 </details>
 
