@@ -21,8 +21,10 @@ import androidx.appcompat.app.AppCompatActivity;
 public class MainActivity extends AppCompatActivity {
     public static final String CHANNEL_ID = "SWY_BOT";
     public static final String SWY_PACKAGE_NAME = "com.tencent.swy";
+    public static final String SWY_BT_PACKAGE_NAME = "com.baitian.pjg.swy.bt";
     private static final String TAG = "MainActivity";
 
+    private String gamePackageName;
     private ActivityResultLauncher<Intent> activityResultLauncher;
 
     @Override
@@ -38,9 +40,20 @@ public class MainActivity extends AppCompatActivity {
         }
 
         try {
-            PackageInfo swyPackageInfo = getPackageManager().getPackageInfo(SWY_PACKAGE_NAME, 0);
-            Log.i(TAG, "Found swy version: " + swyPackageInfo.versionName);
-        } catch (PackageManager.NameNotFoundException e) {
+            PackageInfo swyPackageInfo = getPackageManager().getPackageInfo(SWY_BT_PACKAGE_NAME, 0);
+            gamePackageName = SWY_BT_PACKAGE_NAME;
+            Log.i(TAG, "Found swy (baitian) version: " + swyPackageInfo.versionName);
+        } catch (PackageManager.NameNotFoundException e1) {
+            e1.printStackTrace();
+            try {
+                PackageInfo swyPackageInfo = getPackageManager().getPackageInfo(SWY_PACKAGE_NAME, 0);
+                gamePackageName = SWY_PACKAGE_NAME;
+                Log.i(TAG, "Found swy (tencent) version: " + swyPackageInfo.versionName);
+            } catch (PackageManager.NameNotFoundException e2) {
+                gamePackageName = null;
+            }
+        }
+        if (gamePackageName == null) {
             new AlertDialog.Builder(this)
                     .setMessage(R.string.exit_message)
                     .setPositiveButton(android.R.string.ok, (dialog, which) -> finish())
@@ -86,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
         if (SystemUtil.isHarmonyOS() && SystemUtil.getHarmonyVersion() >= 3) {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         }
-        startActivity(getPackageManager().getLaunchIntentForPackage(SWY_PACKAGE_NAME));
+        startActivity(getPackageManager().getLaunchIntentForPackage(gamePackageName));
         finish();
     }
 }

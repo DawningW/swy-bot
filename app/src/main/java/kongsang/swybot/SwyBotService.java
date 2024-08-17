@@ -71,7 +71,7 @@ public class SwyBotService extends AccessibilityService {
     protected void onServiceConnected() {
         Log.i(TAG, "Accessibility service connected");
         AccessibilityServiceInfo serviceInfo = getServiceInfo();
-        serviceInfo.packageNames = new String[] { MainActivity.SWY_PACKAGE_NAME };
+        serviceInfo.packageNames = new String[] { MainActivity.SWY_PACKAGE_NAME, MainActivity.SWY_BT_PACKAGE_NAME };
         setServiceInfo(serviceInfo);
     }
 
