@@ -20,7 +20,8 @@ class Goals(Enum):
 
 def calculate(foods, materials, cooks, goal=Goals.MAX_MONEY):
     MIN_PRODUCTION = 0 # 菜肴最小烹饪量
-    MAX_PRODUCTION = 30 # 菜肴最大烹饪量
+    MAX_PRODUCTION = 40 # 菜肴最大烹饪量
+    GLOBAL_TIME_REDUCE = 0.03 # 画院提供的全局做菜时间缩减 满级3%
     VAR_NUM = len(foods) # 变量个数
     consumptions = [] # 每种食材的消耗量
     # 决策变量
@@ -84,7 +85,7 @@ def calculate(foods, materials, cooks, goal=Goals.MAX_MONEY):
     result = [None] * len(temp)
     for index, item in enumerate(temp):
         # TODO 游戏实际是把菜和食魂的百分比缩减加在一起的, 我写成乘法了
-        item["time"] = math.ceil(item["time"] * mapping[index][1])
+        item["time"] = math.ceil(item["time"] * (mapping[index][1] - GLOBAL_TIME_REDUCE))
         result[mapping[index][0]] = item
     rest_materials = [material - int(pulp.value(exp)) for material, exp in zip(materials, consumptions)]
     return result, int(pulp.value(obj_money)), rest_materials
